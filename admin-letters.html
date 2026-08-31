@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Letter Management · DearU Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap">
+<style>
+  :root {
+    --bg: #F7F4EF;
+    --ink: #2E2A24;
+    --muted: rgba(46, 42, 36, 0.55);
+    --faint: rgba(46, 42, 36, 0.35);
+    --line: rgba(46, 42, 36, 0.12);
+    --card-bg: #FFFFFF;
+    --error: #7A2E2E;
+    --error-bg: #FBEEEE;
+    --warn: #8A6116;
+    --warn-bg: #FBF3E4;
+    --ok: #2F5D3A;
+    --ok-bg: #EEF5EF;
+    --focus: #2E2A24;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header.top-bar {
+    width: 100%;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 13px;
+  }
+  .top-bar-right a { color: var(--muted); text-decoration: none; }
+  .top-bar-right a:hover { color: var(--ink); }
+  #logout-btn {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  #logout-btn:hover { color: var(--ink); border-color: var(--faint); }
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+
+  #guard-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 80px 0;
+  }
+
+  #page-content { display: none; }
+
+  h1.page-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin: 0 0 4px;
+  }
+  p.page-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0 0 28px;
+  }
+
+  /* ---- List view ---- */
+  .search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .search-row input {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #FCFBF9;
+    outline: none;
+  }
+  .search-row input:focus { border-color: var(--focus); }
+  .search-row button {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .search-row .clear-btn {
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    font-weight: 500;
+  }
+
+  #letter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .letter-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .letter-row:hover { border-color: var(--faint); }
+
+  .letter-row-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .letter-row-to {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 3px;
+  }
+  .letter-row-from {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+  .letter-row-snippet {
+    font-size: 13px;
+    color: rgba(46,42,36,0.75);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .letter-row-side {
+    flex-shrink: 0;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .letter-row-time {
+    font-size: 11px;
+    color: var(--faint);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-badge.public { background: var(--ok-bg); color: var(--ok); }
+  .status-badge.hidden { background: var(--warn-bg); color: var(--warn); }
+  .status-badge.deleted { background: var(--error-bg); color: var(--error); }
+
+  .empty-note {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    padding: 40px 0;
+  }
+
+  #load-more-btn {
+    display: block;
+    margin: 20px auto 0;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  #load-more-btn:hover { color: var(--ink); border-color: var(--faint); }
+
+  /* ---- Detail view ---- */
+  #detail-view { display: none; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .back-link:hover { color: var(--ink); }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 320px) 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+
+  .letter-preview-wrap {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #eee;
+  }
+  .letter-preview-scale {
+    transform-origin: top left;
+  }
+
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .detail-block {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .detail-block h3 {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 12px;
+  }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .label { color: var(--muted); }
+  .detail-row .value { text-align: right; max-width: 60%; }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    padding: 9px 14px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: #FCFBF9;
+    cursor: pointer;
+  }
+  .action-btn.hide-btn { color: var(--warn); }
+  .action-btn.restore-btn { color: var(--ok); }
+  .action-btn.delete-btn { color: var(--error); }
+  .action-btn:hover { border-color: var(--faint); }
+  .action-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .report-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .report-item:last-child { border-bottom: none; }
+  .report-reason { font-weight: 600; margin: 0 0 3px; }
+  .report-details { color: rgba(46,42,36,0.75); margin: 0 0 4px; }
+  .report-meta { color: var(--faint); font-size: 11px; }
+
+  .no-reports {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .toast.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+  <div class="top-bar-right">
+    <a href="admin-dashboard.html">Dashboard</a>
+    <a href="admin-themes.html">Themes</a>
+    <a href="admin-reports.html">Reports</a>
+    <button id="logout-btn">Log out</button>
+  </div>
+</header>
+
+<main>
+  <div id="guard-state">Checking access…</div>
+
+  <div id="page-content">
+
+    <!-- LIST VIEW -->
+    <div id="list-view">
+      <h1 class="page-title">Letter Management</h1>
+      <p class="page-subtitle">Every letter, across all statuses. Click one to review it.</p>
+
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="Search by recipient name…">
+        <button id="search-btn">Search</button>
+        <button id="clear-search-btn" class="clear-btn" style="display:none;">Clear</button>
+      </div>
+
+      <div id="letter-list"></div>
+      <div class="empty-note" id="empty-note" style="display:none;">No letters found.</div>
+      <button id="load-more-btn" style="display:none;">Load more</button>
+    </div>
+
+    <!-- DETAIL VIEW -->
+    <div id="detail-view">
+      <a class="back-link" id="back-link">← Back to all letters</a>
+
+      <div class="detail-grid">
+        <div class="letter-preview-wrap">
+          <div id="letter-preview-container" class="letter-preview-scale"></div>
+        </div>
+
+        <div class="detail-panel">
+          <div class="detail-block">
+            <h3>Letter details</h3>
+            <div class="detail-row"><span class="label">To</span><span class="value" id="detail-to"></span></div>
+            <div class="detail-row"><span class="label">From</span><span class="value" id="detail-from"></span></div>
+            <div class="detail-row"><span class="label">Submitted</span><span class="value" id="detail-time"></span></div>
+            <div class="detail-row"><span class="label">Status</span><span class="value" id="detail-status"></span></div>
+          </div>
+
+          <div class="detail-block">
+            <h3>Actions</h3>
+            <div class="action-row">
+              <button class="action-btn hide-btn" id="hide-btn">Hide</button>
+              <button class="action-btn restore-btn" id="restore-btn">Restore to public</button>
+              <button class="action-btn delete-btn" id="delete-btn">Delete permanently</button>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <h3>Reports on this letter</h3>
+            <div id="reports-list"></div>
+            <p class="no-reports" id="no-reports-note" style="display:none;">No reports for this letter.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    updateDoc,
+    deleteDoc,
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    startAfter,
+    getDocs
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ---- Canonical constants ----
+  const CANVAS = { width: 1414, height: 2000 };
+  const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+  const FONT_SIZE_MIN = 24;
+  const FONT_SIZE_MAX = 48;
+  const CHAR_LIMIT = 1500;
+  const LINE_HEIGHT_FACTOR = 1.5;
+
+  const FONTS = {
+    en: [
+      { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+      { id: "en-elegant-serif", name: "Elegant Serif", family: "'Cormorant Garamond', serif" },
+      { id: "en-editorial-serif", name: "Editorial Serif", family: "'Playfair Display', serif" },
+      { id: "en-clean-sans", name: "Clean Sans", family: "'Inter', sans-serif" },
+      { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+      { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" }
+    ],
+    bn: [
+      { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+      { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+      { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+      { id: "bn-rounded", name: "Baloo Da 2", family: "'Baloo Da 2', sans-serif" },
+      { id: "bn-sans-alt", name: "Noto Sans Bengali", family: "'Noto Sans Bengali', sans-serif" },
+      { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+    ]
+  };
+
+  const INK_PRESETS = [
+    { id: "black", name: "Black Ink", hex: "#1A1A1A" },
+    { id: "dark-brown", name: "Dark Brown", hex: "#4A2E1D" },
+    { id: "navy", name: "Navy Ink", hex: "#1B2A4A" },
+    { id: "deep-red", name: "Deep Red", hex: "#5C1A1A" },
+    { id: "forest-green", name: "Forest Green", hex: "#1F3D2B" },
+    { id: "charcoal", name: "Charcoal", hex: "#2E2E2E" }
+  ];
+
+  // ---- Canonical Letter Renderer (copied verbatim) ----
+  function extractDriveFileId(link) {
+    const patterns = [/\/file\/d\/([a-zA-Z0-9_-]{10,})/, /[?&]id=([a-zA-Z0-9_-]{10,})/];
+    for (const p of patterns) {
+      const m = link.match(p);
+      if (m) return m[1];
+    }
+    return null;
+  }
+  function driveDirectUrl(fileId, size = 2000) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
+  }
+
+  function normalizeTo(to) { return to.trim().toLowerCase(); }
+
+  function buildToKeywords(to) {
+    const norm = normalizeTo(to);
+    const keywords = [];
+    for (let i = 1; i <= Math.min(norm.length, 40); i++) keywords.push(norm.slice(0, i));
+    return keywords;
+  }
+
+  function getFontFamily(fontId) {
+    const all = [...FONTS.en, ...FONTS.bn];
+    const found = all.find(f => f.id === fontId);
+    return found ? found.family : FONTS.en[0].family;
+  }
+
+  function buildLetterText(letter) {
+    const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+    if (letter.from && letter.from.trim().length > 0) lines.push(`— ${letter.from.trim()}`);
+    return lines;
+  }
+
+  function wrapParagraph(ctx, text, maxWidth) {
+    const words = text.split(" ");
+    const lines = [];
+    let current = "";
+    for (const word of words) {
+      const test = current ? current + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && current) { lines.push(current); current = word; }
+      else current = test;
+    }
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  function buildWrappedLines(ctx, letter, fontSize) {
+    ctx.font = `${fontSize}px ${getFontFamily(letter.fontId)}`;
+    const wrapped = [];
+    buildLetterText(letter).forEach(line => {
+      if (line === "") { wrapped.push(""); return; }
+      wrapParagraph(ctx, line, LETTER_AREA.width).forEach(l => wrapped.push(l));
+    });
+    return wrapped;
+  }
+
+  function checkOverflow(ctx, letter) {
+    const wrapped = buildWrappedLines(ctx, letter, letter.fontSize);
+    const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+    const totalHeight = wrapped.length * lineHeight;
+    return { fits: totalHeight <= LETTER_AREA.height, usedHeight: totalHeight, lines: wrapped, lineHeight };
+  }
+
+  function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+  }
+  function isLowContrast(inkHex, backgroundTone) {
+    const rgb = hexToRgb(inkHex);
+    const luminance = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+    return backgroundTone === "light" ? luminance > 0.55 : luminance < 0.45;
+  }
+
+  function renderLetterDOM(container, letter, scale = 1) {
+    container.style.position = "relative";
+    container.style.width = `${CANVAS.width * scale}px`;
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+    container.style.backgroundSize = "cover";
+    container.innerHTML = "";
+    const textBox = document.createElement("div");
+    Object.assign(textBox.style, {
+      position: "absolute",
+      left: `${LETTER_AREA.left * scale}px`,
+      top: `${LETTER_AREA.top * scale}px`,
+      width: `${LETTER_AREA.width * scale}px`,
+      height: `${LETTER_AREA.height * scale}px`,
+      fontFamily: getFontFamily(letter.fontId),
+      fontSize: `${letter.fontSize * scale}px`,
+      lineHeight: LINE_HEIGHT_FACTOR,
+      color: letter.inkColor,
+      textAlign: letter.alignment,
+      whiteSpace: "pre-wrap",
+      overflow: "hidden"
+    });
+    textBox.textContent = buildLetterText(letter).join("\n");
+    container.appendChild(textBox);
+  }
+  // ---- end canonical renderer ----
+
+  const guardState = document.getElementById("guard-state");
+  const pageContent = document.getElementById("page-content");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  const listView = document.getElementById("list-view");
+  const detailView = document.getElementById("detail-view");
+  const letterListEl = document.getElementById("letter-list");
+  const emptyNote = document.getElementById("empty-note");
+  const loadMoreBtn = document.getElementById("load-more-btn");
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+  const clearSearchBtn = document.getElementById("clear-search-btn");
+
+  const backLink = document.getElementById("back-link");
+  const previewContainer = document.getElementById("letter-preview-container");
+  const previewWrap = document.querySelector(".letter-preview-wrap");
+  const detailTo = document.getElementById("detail-to");
+  const detailFrom = document.getElementById("detail-from");
+  const detailTime = document.getElementById("detail-time");
+  const detailStatus = document.getElementById("detail-status");
+  const hideBtn = document.getElementById("hide-btn");
+  const restoreBtn = document.getElementById("restore-btn");
+  const deleteBtn = document.getElementById("delete-btn");
+  const reportsList = document.getElementById("reports-list");
+  const noReportsNote = document.getElementById("no-reports-note");
+
+  const toast = document.getElementById("toast");
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add("visible");
+    setTimeout(() => toast.classList.remove("visible"), 2200);
+  }
+
+  const PAGE_SIZE = 20;
+  let lastVisibleDoc = null;
+  let currentMode = "default"; // "default" | "search"
+  let currentSearchTerm = "";
+  let currentLetterId = null;
+
+  function relativeTime(timestamp) {
+    if (!timestamp || !timestamp.toDate) return "";
+    const date = timestamp.toDate();
+    const diffMs = Date.now() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 30) return `${diffDay}d ago`;
+    return date.toLocaleDateString();
+  }
+
+  function letterRowTemplate(id, data) {
+    const row = document.createElement("div");
+    row.className = "letter-row";
+    row.addEventListener("click", () => navigateToDetail(id));
+
+    const main = document.createElement("div");
+    main.className = "letter-row-main";
+    const toEl = document.createElement("p");
+    toEl.className = "letter-row-to";
+    toEl.textContent = `${data.salutation || "Dear"} ${data.to || "(unknown)"}`;
+    const fromEl = document.createElement("p");
+    fromEl.className = "letter-row-from";
+    fromEl.textContent = data.from && data.from.trim() ? `From ${data.from.trim()}` : "Anonymous";
+    const snippetEl = document.createElement("p");
+    snippetEl.className = "letter-row-snippet";
+    snippetEl.textContent = (data.body || "").slice(0, 140);
+    main.appendChild(toEl);
+    main.appendChild(fromEl);
+    main.appendChild(snippetEl);
+
+    const side = document.createElement("div");
+    side.className = "letter-row-side";
+    const statusBadge = document.createElement("span");
+    statusBadge.className = `status-badge ${data.status || "public"}`;
+    statusBadge.textContent = data.status || "public";
+    const timeEl = document.createElement("span");
+    timeEl.className = "letter-row-time";
+    timeEl.textContent = relativeTime(data.createdAt);
+    side.appendChild(statusBadge);
+    side.appendChild(timeEl);
+
+    row.appendChild(main);
+    row.appendChild(side);
+    return row;
+  }
+
+  async function loadDefaultList(isFirstPage) {
+    let q;
+    if (isFirstPage) {
+      q = query(collection(db, "letters"), orderBy("createdAt", "desc"), limit(PAGE_SIZE));
+    } else {
+      q = query(collection(db, "letters"), orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), limit(PAGE_SIZE));
+    }
+    // Uses index #4 (createdAt desc, auto single-field index).
+    const snap = await getDocs(q);
+    appendResults(snap, isFirstPage);
+  }
+
+  async function loadSearchResults(term, isFirstPage) {
+    const normalized = normalizeTo(term);
+    let q;
+    if (isFirstPage) {
+      q = query(
+        collection(db, "letters"),
+        where("toKeywords", "array-contains", normalized),
+        orderBy("createdAt", "desc"),
+        limit(PAGE_SIZE)
+      );
+    } else {
+      q = query(
+        collection(db, "letters"),
+        where("toKeywords", "array-contains", normalized),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisibleDoc),
+        limit(PAGE_SIZE)
+      );
+    }
+    // Uses index #3 (toKeywords array-contains + createdAt desc, all statuses).
+    const snap = await getDocs(q);
+    appendResults(snap, isFirstPage);
+  }
+
+  function appendResults(snap, isFirstPage) {
+    if (isFirstPage) letterListEl.innerHTML = "";
+
+    if (snap.empty && isFirstPage) {
+      emptyNote.style.display = "block";
+      loadMoreBtn.style.display = "none";
+      return;
+    }
+    emptyNote.style.display = "none";
+
+    snap.forEach((docSnap) => {
+      letterListEl.appendChild(letterRowTemplate(docSnap.id, docSnap.data()));
+    });
+
+    lastVisibleDoc = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : lastVisibleDoc;
+    loadMoreBtn.style.display = snap.docs.length < PAGE_SIZE ? "none" : "block";
+  }
+
+  async function refreshList() {
+    lastVisibleDoc = null;
+    try {
+      if (currentMode === "search") {
+        await loadSearchResults(currentSearchTerm, true);
+      } else {
+        await loadDefaultList(true);
+      }
+    } catch (err) {
+      showToast("Couldn't load letters.");
+    }
+  }
+
+  loadMoreBtn.addEventListener("click", async () => {
+    try {
+      if (currentMode === "search") {
+        await loadSearchResults(currentSearchTerm, false);
+      } else {
+        await loadDefaultList(false);
+      }
+    } catch (err) {
+      showToast("Couldn't load more letters.");
+    }
+  });
+
+  searchBtn.addEventListener("click", () => {
+    const term = searchInput.value.trim();
+    if (!term) return;
+    currentMode = "search";
+    currentSearchTerm = term;
+    clearSearchBtn.style.display = "inline-block";
+    refreshList();
+  });
+
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") searchBtn.click();
+  });
+
+  clearSearchBtn.addEventListener("click", () => {
+    currentMode = "default";
+    currentSearchTerm = "";
+    searchInput.value = "";
+    clearSearchBtn.style.display = "none";
+    refreshList();
+  });
+
+  function setPreviewScale() {
+    // Fit the fixed CANVAS size into the available preview column width.
+    const available = previewWrap.clientWidth || 320;
+    const scale = Math.min(1, available / CANVAS.width);
+    previewContainer.style.transform = `scale(${scale})`;
+    previewContainer.style.width = `${CANVAS.width}px`;
+    previewContainer.style.height = `${CANVAS.height}px`;
+    previewWrap.style.height = `${CANVAS.height * scale}px`;
+  }
+
+  async function loadReportsFor(letterId) {
+    reportsList.innerHTML = "";
+    try {
+      const q = query(collection(db, "reports"), where("letterId", "==", letterId));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        noReportsNote.style.display = "block";
+        return;
+      }
+      noReportsNote.style.display = "none";
+      snap.forEach((docSnap) => {
+        const r = docSnap.data();
+        const item = document.createElement("div");
+        item.className = "report-item";
+        const reasonEl = document.createElement("p");
+        reasonEl.className = "report-reason";
+        reasonEl.textContent = r.reason || "(no reason given)";
+        item.appendChild(reasonEl);
+        if (r.details) {
+          const detailsEl = document.createElement("p");
+          detailsEl.className = "report-details";
+          detailsEl.textContent = r.details;
+          item.appendChild(detailsEl);
+        }
+        const metaEl = document.createElement("p");
+        metaEl.className = "report-meta";
+        metaEl.textContent = `${relativeTime(r.createdAt)} · ${r.status || "pending"}`;
+        item.appendChild(metaEl);
+        reportsList.appendChild(item);
+      });
+    } catch (err) {
+      noReportsNote.style.display = "block";
+      noReportsNote.textContent = "Couldn't load reports.";
+    }
+  }
+
+  function updateActionButtons(status) {
+    hideBtn.style.display = status === "public" ? "inline-block" : "none";
+    restoreBtn.style.display = (status === "hidden" || status === "deleted") ? "inline-block" : "none";
+  }
+
+  async function loadDetail(letterId) {
+    try {
+      const letterSnap = await getDoc(doc(db, "letters", letterId));
+      if (!letterSnap.exists()) {
+        showToast("Letter not found.");
+        navigateToList();
+        return;
+      }
+      const data = letterSnap.data();
+      currentLetterId = letterId;
+
+      detailTo.textContent = `${data.salutation || "Dear"} ${data.to || ""}`;
+      detailFrom.textContent = data.from && data.from.trim() ? data.from.trim() : "Anonymous";
+      detailTime.textContent = relativeTime(data.createdAt) || "—";
+      detailStatus.innerHTML = "";
+      const statusBadge = document.createElement("span");
+      statusBadge.className = `status-badge ${data.status || "public"}`;
+      statusBadge.textContent = data.status || "public";
+      detailStatus.appendChild(statusBadge);
+
+      updateActionButtons(data.status);
+
+      setPreviewScale();
+      renderLetterDOM(previewContainer, data, 1);
+
+      await loadReportsFor(letterId);
+    } catch (err) {
+      showToast("Couldn't load this letter.");
+    }
+  }
+
+  hideBtn.addEventListener("click", async () => {
+    if (!currentLetterId) return;
+    hideBtn.disabled = true;
+    try {
+      await updateDoc(doc(db, "letters", currentLetterId), { status: "hidden" });
+      showToast("Letter hidden.");
+      loadDetail(currentLetterId);
+    } catch (err) {
+      showToast("Couldn't hide this letter.");
+    } finally {
+      hideBtn.disabled = false;
+    }
+  });
+
+  restoreBtn.addEventListener("click", async () => {
+    if (!currentLetterId) return;
+    restoreBtn.disabled = true;
+    try {
+      await updateDoc(doc(db, "letters", currentLetterId), { status: "public" });
+      showToast("Letter restored to public.");
+      loadDetail(currentLetterId);
+    } catch (err) {
+      showToast("Couldn't restore this letter.");
+    } finally {
+      restoreBtn.disabled = false;
+    }
+  });
+
+  deleteBtn.addEventListener("click", async () => {
+    if (!currentLetterId) return;
+    const confirmed = window.confirm("Delete this letter permanently? This cannot be undone.");
+    if (!confirmed) return;
+    deleteBtn.disabled = true;
+    try {
+      await deleteDoc(doc(db, "letters", currentLetterId));
+      showToast("Letter deleted.");
+      navigateToList();
+    } catch (err) {
+      showToast("Couldn't delete this letter.");
+    } finally {
+      deleteBtn.disabled = false;
+    }
+  });
+
+  function setUrlParam(id) {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("id", id);
+    else url.searchParams.delete("id");
+    window.history.pushState({ id: id || null }, "", url);
+  }
+
+  function navigateToDetail(id) {
+    setUrlParam(id);
+    showDetailView(id);
+  }
+
+  function navigateToList() {
+    setUrlParam(null);
+    showListView();
+  }
+
+  function showListView() {
+    listView.style.display = "block";
+    detailView.style.display = "none";
+    currentLetterId = null;
+  }
+
+  function showDetailView(id) {
+    listView.style.display = "none";
+    detailView.style.display = "block";
+    loadDetail(id);
+  }
+
+  backLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigateToList();
+  });
+
+  window.addEventListener("popstate", () => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (id) showDetailView(id);
+    else showListView();
+  });
+
+  window.addEventListener("resize", () => {
+    if (detailView.style.display === "block") setPreviewScale();
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.replace("admin.html");
+  });
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.replace("admin.html");
+      return;
+    }
+    try {
+      const adminDoc = await getDoc(doc(db, "admins", user.uid));
+      if (!adminDoc.exists()) {
+        await signOut(auth);
+        window.location.replace("admin.html");
+        return;
+      }
+    } catch (err) {
+      window.location.replace("admin.html");
+      return;
+    }
+
+    guardState.style.display = "none";
+    pageContent.style.display = "block";
+
+    const params = new URLSearchParams(window.location.search);
+    const initialId = params.get("id");
+    if (initialId) {
+      showDetailView(initialId);
+    } else {
+      showListView();
+      refreshList();
+    }
+  });
+</script>
+
+</body>
+</html>

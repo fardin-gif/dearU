@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search · DearU</title>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap">
+<style>
+  :root {
+    --bg: #F7F4EF;
+    --ink: #2E2A24;
+    --muted: rgba(46, 42, 36, 0.55);
+    --faint: rgba(46, 42, 36, 0.35);
+    --line: rgba(46, 42, 36, 0.12);
+    --card-bg: #FFFFFF;
+    --focus: #2E2A24;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header.top-bar {
+    width: 100%;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px 24px 60px;
+  }
+
+  .search-header {
+    text-align: center;
+    margin: 20px 0 32px;
+  }
+
+  .search-header h1 {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 26px;
+    margin: 0 0 6px;
+  }
+
+  .search-header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .search-box {
+    display: flex;
+    gap: 10px;
+    max-width: 480px;
+    margin: 0 auto 8px;
+  }
+
+  .search-box input {
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    background: #FCFBF9;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    outline: none;
+  }
+  .search-box input:focus { border-color: var(--focus); }
+
+  .search-box button {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .search-box button:hover { opacity: 0.88; }
+
+  .matching-names {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto 28px;
+  }
+  .matching-names.visible { display: flex; }
+
+  .name-chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--card-bg);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .name-chip:hover { color: var(--ink); border-color: var(--faint); }
+
+  .results-count {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    min-height: 18px;
+  }
+
+  #results-strip {
+    display: flex;
+    gap: 22px;
+    overflow-x: auto;
+    padding: 10px 4px 20px;
+    scroll-snap-type: x proximity;
+  }
+
+  .result-card {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .result-preview-wrap {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    background: #eee;
+  }
+
+  .result-preview-scale {
+    transform-origin: top left;
+  }
+
+  .result-meta {
+    text-align: center;
+    width: 100%;
+  }
+
+  .result-to {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+
+  .result-time {
+    font-size: 11px;
+    color: var(--faint);
+    margin: 0 0 8px;
+  }
+
+  .open-link {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--faint);
+    padding-bottom: 1px;
+  }
+  .open-link:hover { border-bottom-color: var(--ink); }
+
+  .empty-state {
+    display: none;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 60px 0;
+  }
+  .empty-state.visible { display: block; }
+
+  .load-more-wrap {
+    text-align: center;
+    margin-top: 4px;
+  }
+  #load-more-btn {
+    display: none;
+    padding: 9px 20px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  #load-more-btn:hover { color: var(--ink); border-color: var(--faint); }
+
+  .dearu-footer {
+    width: 100%;
+    padding: 28px 16px 22px;
+    text-align: center;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    margin-top: 48px;
+  }
+  .dearu-footer-line {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.45);
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .dearu-footer-dot { opacity: 0.5; }
+  .dearu-footer-link {
+    color: rgba(0,0,0,0.55);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .dearu-footer-link:hover {
+    color: rgba(0,0,0,0.85);
+    border-bottom-color: currentColor;
+  }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+</header>
+
+<main>
+  <div class="search-header">
+    <h1>Find a letter</h1>
+    <p>Search by the recipient's name — not the sender, not the words inside.</p>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="Search a name…">
+    <button id="search-btn">Search</button>
+  </div>
+
+  <div class="matching-names" id="matching-names"></div>
+
+  <div class="results-count" id="results-count"></div>
+
+  <div id="results-strip"></div>
+
+  <div class="empty-state" id="empty-state">No letters found for this name yet.</div>
+
+  <div class="load-more-wrap">
+    <button id="load-more-btn">Load more</button>
+  </div>
+</main>
+
+<footer class="dearu-footer">
+  <p class="dearu-footer-line">
+    <span class="dearu-footer-copyright">© <span id="dearu-footer-year"></span> DearU</span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Designed by <a href="#" class="dearu-footer-link">A.I. Mahi</a></span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Developed by <a href="#" class="dearu-footer-link">Fardin Hossain</a></span>
+  </p>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    query,
+    where,
+    orderBy,
+    limit,
+    startAfter,
+    getDocs,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const themeCache = new Map();
+  async function getThemeImageUrl(themeId) {
+    if (!themeId) return null;
+    if (themeCache.has(themeId)) return themeCache.get(themeId);
+    try {
+      const themeSnap = await getDoc(doc(db, "themes", themeId));
+      const url = themeSnap.exists() ? themeSnap.data().imageUrl : null;
+      themeCache.set(themeId, url);
+      return url;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  // ---- Canonical constants ----
+  const CANVAS = { width: 1414, height: 2000 };
+  const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+  const FONT_SIZE_MIN = 24;
+  const FONT_SIZE_MAX = 48;
+  const CHAR_LIMIT = 1500;
+  const LINE_HEIGHT_FACTOR = 1.5;
+
+  const FONTS = {
+    en: [
+      { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+      { id: "en-elegant-serif", name: "Elegant Serif", family: "'Cormorant Garamond', serif" },
+      { id: "en-editorial-serif", name: "Editorial Serif", family: "'Playfair Display', serif" },
+      { id: "en-clean-sans", name: "Clean Sans", family: "'Inter', sans-serif" },
+      { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+      { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" }
+    ],
+    bn: [
+      { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+      { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+      { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+      { id: "bn-rounded", name: "Baloo Da 2", family: "'Baloo Da 2', sans-serif" },
+      { id: "bn-sans-alt", name: "Noto Sans Bengali", family: "'Noto Sans Bengali', sans-serif" },
+      { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+    ]
+  };
+
+  const INK_PRESETS = [
+    { id: "black", name: "Black Ink", hex: "#1A1A1A" },
+    { id: "dark-brown", name: "Dark Brown", hex: "#4A2E1D" },
+    { id: "navy", name: "Navy Ink", hex: "#1B2A4A" },
+    { id: "deep-red", name: "Deep Red", hex: "#5C1A1A" },
+    { id: "forest-green", name: "Forest Green", hex: "#1F3D2B" },
+    { id: "charcoal", name: "Charcoal", hex: "#2E2E2E" }
+  ];
+
+  // ---- Canonical Letter Renderer (copied verbatim) ----
+  function extractDriveFileId(link) {
+    const patterns = [/\/file\/d\/([a-zA-Z0-9_-]{10,})/, /[?&]id=([a-zA-Z0-9_-]{10,})/];
+    for (const p of patterns) {
+      const m = link.match(p);
+      if (m) return m[1];
+    }
+    return null;
+  }
+  function driveDirectUrl(fileId, size = 2000) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
+  }
+
+  function normalizeTo(to) { return to.trim().toLowerCase(); }
+
+  function buildToKeywords(to) {
+    const norm = normalizeTo(to);
+    const keywords = [];
+    for (let i = 1; i <= Math.min(norm.length, 40); i++) keywords.push(norm.slice(0, i));
+    return keywords;
+  }
+
+  function getFontFamily(fontId) {
+    const all = [...FONTS.en, ...FONTS.bn];
+    const found = all.find(f => f.id === fontId);
+    return found ? found.family : FONTS.en[0].family;
+  }
+
+  function buildLetterText(letter) {
+    const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+    if (letter.from && letter.from.trim().length > 0) lines.push(`— ${letter.from.trim()}`);
+    return lines;
+  }
+
+  function wrapParagraph(ctx, text, maxWidth) {
+    const words = text.split(" ");
+    const lines = [];
+    let current = "";
+    for (const word of words) {
+      const test = current ? current + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && current) { lines.push(current); current = word; }
+      else current = test;
+    }
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  function buildWrappedLines(ctx, letter, fontSize) {
+    ctx.font = `${fontSize}px ${getFontFamily(letter.fontId)}`;
+    const wrapped = [];
+    buildLetterText(letter).forEach(line => {
+      if (line === "") { wrapped.push(""); return; }
+      wrapParagraph(ctx, line, LETTER_AREA.width).forEach(l => wrapped.push(l));
+    });
+    return wrapped;
+  }
+
+  function checkOverflow(ctx, letter) {
+    const wrapped = buildWrappedLines(ctx, letter, letter.fontSize);
+    const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+    const totalHeight = wrapped.length * lineHeight;
+    return { fits: totalHeight <= LETTER_AREA.height, usedHeight: totalHeight, lines: wrapped, lineHeight };
+  }
+
+  function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+  }
+  function isLowContrast(inkHex, backgroundTone) {
+    const rgb = hexToRgb(inkHex);
+    const luminance = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+    return backgroundTone === "light" ? luminance > 0.55 : luminance < 0.45;
+  }
+
+  function renderLetterDOM(container, letter, scale = 1) {
+    container.style.position = "relative";
+    container.style.width = `${CANVAS.width * scale}px`;
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+    container.style.backgroundSize = "cover";
+    container.innerHTML = "";
+    const textBox = document.createElement("div");
+    Object.assign(textBox.style, {
+      position: "absolute",
+      left: `${LETTER_AREA.left * scale}px`,
+      top: `${LETTER_AREA.top * scale}px`,
+      width: `${LETTER_AREA.width * scale}px`,
+      height: `${LETTER_AREA.height * scale}px`,
+      fontFamily: getFontFamily(letter.fontId),
+      fontSize: `${letter.fontSize * scale}px`,
+      lineHeight: LINE_HEIGHT_FACTOR,
+      color: letter.inkColor,
+      textAlign: letter.alignment,
+      whiteSpace: "pre-wrap",
+      overflow: "hidden"
+    });
+    textBox.textContent = buildLetterText(letter).join("\n");
+    container.appendChild(textBox);
+  }
+  // ---- end canonical renderer ----
+
+  document.getElementById('dearu-footer-year').textContent = new Date().getFullYear();
+
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+  const matchingNamesEl = document.getElementById("matching-names");
+  const resultsCountEl = document.getElementById("results-count");
+  const resultsStrip = document.getElementById("results-strip");
+  const emptyState = document.getElementById("empty-state");
+  const loadMoreBtn = document.getElementById("load-more-btn");
+
+  const PAGE_SIZE = 12;
+  const PREVIEW_HEIGHT = 340; // px, fixed on-screen height for each result card
+  const previewScale = PREVIEW_HEIGHT / CANVAS.height;
+
+  let lastVisibleDoc = null;
+  let currentTerm = "";
+  let totalLoadedCount = 0;
+
+  // Lazy-render only cards that come near the viewport, since each one
+  // holds a full CANVAS-sized letter render.
+  const lazyObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const container = entry.target;
+        const letter = container._letterData;
+        if (letter && !container._rendered) {
+          renderLetterDOM(container, letter, previewScale);
+          container._rendered = true;
+        }
+        lazyObserver.unobserve(container);
+      }
+    });
+  }, { root: resultsStrip, rootMargin: "0px 600px 0px 600px" });
+
+  function relativeTime(timestamp) {
+    if (!timestamp || !timestamp.toDate) return "";
+    const date = timestamp.toDate();
+    const diffMs = Date.now() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return `${diffHr}h ago`;
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 30) return `${diffDay}d ago`;
+    return date.toLocaleDateString();
+  }
+
+  // Now takes the already-resolved themeImageUrl and merges it into the
+  // data handed to renderLetterDOM, since `letters` docs only carry
+  // themeId (not the actual image URL).
+  function buildResultCard(id, data, themeImageUrl) {
+    const card = document.createElement("div");
+    card.className = "result-card";
+
+    const previewWrap = document.createElement("div");
+    previewWrap.className = "result-preview-wrap";
+    previewWrap.style.width = `${CANVAS.width * previewScale}px`;
+    previewWrap.style.height = `${CANVAS.height * previewScale}px`;
+
+    const previewContainer = document.createElement("div");
+    previewContainer.className = "result-preview-scale";
+    previewContainer._letterData = { ...data, themeImageUrl };
+    previewContainer._rendered = false;
+    // Placeholder size/background until lazy-rendered
+    previewContainer.style.width = `${CANVAS.width * previewScale}px`;
+    previewContainer.style.height = `${CANVAS.height * previewScale}px`;
+    previewContainer.style.background = "#eee";
+
+    previewWrap.appendChild(previewContainer);
+    lazyObserver.observe(previewContainer);
+
+    const meta = document.createElement("div");
+    meta.className = "result-meta";
+    const toEl = document.createElement("p");
+    toEl.className = "result-to";
+    toEl.textContent = `To: ${data.to || ""}`;
+    const timeEl = document.createElement("p");
+    timeEl.className = "result-time";
+    timeEl.textContent = relativeTime(data.createdAt);
+    const openLink = document.createElement("a");
+    openLink.className = "open-link";
+    openLink.href = `letter.html?id=${id}`;
+    openLink.textContent = "Open";
+
+    meta.appendChild(toEl);
+    meta.appendChild(timeEl);
+    meta.appendChild(openLink);
+
+    card.appendChild(previewWrap);
+    card.appendChild(meta);
+    return card;
+  }
+
+  function renderMatchingNames(docs) {
+    const names = [];
+    docs.forEach((docSnap) => {
+      const to = docSnap.data().to;
+      if (to && !names.includes(to)) names.push(to);
+    });
+    matchingNamesEl.innerHTML = "";
+    if (names.length <= 1) {
+      matchingNamesEl.classList.remove("visible");
+      return;
+    }
+    matchingNamesEl.classList.add("visible");
+    names.slice(0, 10).forEach((name) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "name-chip";
+      chip.textContent = name;
+      chip.addEventListener("click", () => {
+        searchInput.value = name;
+        runSearch(name);
+      });
+      matchingNamesEl.appendChild(chip);
+    });
+  }
+
+  async function runSearch(term, isFirstPage = true) {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+
+    currentTerm = trimmed;
+    const normalized = normalizeTo(trimmed);
+
+    if (isFirstPage) {
+      resultsStrip.innerHTML = "";
+      lastVisibleDoc = null;
+      totalLoadedCount = 0;
+      emptyState.classList.remove("visible");
+      resultsCountEl.textContent = "Searching…";
+    }
+
+    // Uses index #2 (toKeywords array-contains + status asc + createdAt desc).
+    // NOTE: everything, including building the query, now lives inside this
+    // try/catch. Previously the query-building step sat outside it, so any
+    // synchronous error there would leave the UI stuck on "Searching…"
+    // forever with nothing shown and nothing logged.
+    try {
+      let q;
+      if (isFirstPage) {
+        q = query(
+          collection(db, "letters"),
+          where("toKeywords", "array-contains", normalized),
+          where("status", "==", "public"),
+          orderBy("createdAt", "desc"),
+          limit(PAGE_SIZE)
+        );
+      } else {
+        q = query(
+          collection(db, "letters"),
+          where("toKeywords", "array-contains", normalized),
+          where("status", "==", "public"),
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisibleDoc),
+          limit(PAGE_SIZE)
+        );
+      }
+
+      // Guard against a request that hangs instead of failing cleanly
+      // (e.g. a network issue, or Firestore silently waiting on an
+      // index that hasn't finished building yet).
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject({ code: "client/timeout", message: "Request timed out after 10s — likely a network issue." }), 10000)
+      );
+      const snap = await Promise.race([getDocs(q), timeoutPromise]);
+
+      if (isFirstPage) renderMatchingNames(snap.docs);
+
+      if (snap.empty && isFirstPage) {
+        emptyState.textContent = "No letters found for this name yet.";
+        emptyState.classList.add("visible");
+        resultsCountEl.textContent = "";
+        loadMoreBtn.style.display = "none";
+        return;
+      }
+      const cards = await Promise.all(snap.docs.map(async (docSnap) => {
+        const data = docSnap.data();
+        const themeImageUrl = await getThemeImageUrl(data.themeId);
+        return buildResultCard(docSnap.id, data, themeImageUrl);
+      }));
+      cards.forEach((card) => resultsStrip.appendChild(card));
+
+      totalLoadedCount += snap.docs.length;
+      lastVisibleDoc = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : lastVisibleDoc;
+
+      resultsCountEl.textContent = `${totalLoadedCount} letter${totalLoadedCount === 1 ? "" : "s"} found.`;
+      loadMoreBtn.style.display = snap.docs.length < PAGE_SIZE ? "none" : "block";
+    } catch (err) {
+      console.error("DearU search error:", err);
+      resultsCountEl.textContent = "";
+      const debugHint = err && err.code ? ` (${err.code})` : "";
+      emptyState.textContent = `Something went wrong loading results${debugHint}. Check the console for details.`;
+      emptyState.classList.add("visible");
+    }
+  }
+
+  searchBtn.addEventListener("click", () => runSearch(searchInput.value));
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runSearch(searchInput.value);
+  });
+  loadMoreBtn.addEventListener("click", () => runSearch(currentTerm, false));
+
+  // Prefill / auto-run from ?q=
+  const params = new URLSearchParams(window.location.search);
+  const initialQuery = params.get("q");
+  if (initialQuery && initialQuery.trim()) {
+    searchInput.value = initialQuery;
+    runSearch(initialQuery);
+  }
+</script>
+
+</body>
+</html>

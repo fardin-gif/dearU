@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Letter released · DearU</title>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap">
+<style>
+  :root {
+    --bg: #F6F1E7;
+    --ink: #1A1A1A;
+    --ink-soft: rgba(26,26,26,0.62);
+    --ink-faint: rgba(26,26,26,0.4);
+    --border: rgba(26,26,26,0.12);
+    --surface: #FBF8F1;
+    --accent: #5C1A1A;
+    --accent-hover: #431010;
+    --accent-tint: rgba(92,26,26,0.08);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a { color: inherit; }
+
+  /* ---------- Header ---------- */
+  .site-header {
+    width: 100%;
+    padding: 22px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    opacity: 0.92;
+    transition: opacity 0.15s ease;
+  }
+  .wordmark:hover { opacity: 1; }
+  .wordmark:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+
+  /* ---------- Main ---------- */
+  main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 56px 24px 80px;
+  }
+
+  .ru-shell {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .ru-status {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    padding: 80px 0;
+  }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ru-success,
+  .ru-error {
+    text-align: center;
+    animation: riseIn 0.5s ease-out both;
+  }
+
+  .ru-heading {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    line-height: 1.3;
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+
+  .ru-sub {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ---------- Letter preview ---------- */
+  .ru-preview-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 44px;
+  }
+
+  .ru-preview {
+    box-shadow: 0 24px 48px -20px rgba(74,46,29,0.35);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  /* ---------- Share link ---------- */
+  .ru-share {
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 24px;
+  }
+
+  .ru-share-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+
+  .ru-share-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .ru-share-url {
+    flex: 1 1 220px;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  /* ---------- Buttons ---------- */
+  .ru-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+  }
+  .ru-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .ru-btn-outline {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--ink);
+  }
+  .ru-btn-outline:hover { border-color: var(--ink-faint); background: rgba(0,0,0,0.02); }
+  .ru-btn-outline.is-copied {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-tint);
+  }
+
+  .ru-btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #FBF3EC;
+    width: 100%;
+    padding: 13px 18px;
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+  }
+  .ru-btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+  /* ---------- Note ---------- */
+  .ru-note {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--ink-faint);
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .ru-inline-link {
+    color: var(--ink-soft);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 2px;
+  }
+  .ru-inline-link:hover { color: var(--ink); text-decoration-color: var(--ink-faint); }
+
+  /* ---------- Error state ---------- */
+  .ru-error .ru-btn-primary { margin-top: 8px; width: auto; padding: 11px 22px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ru-success, .ru-error {
+      animation: none;
+    }
+    .ru-btn, .wordmark {
+      transition: none;
+    }
+  }
+
+  /* ---------- Footer (verbatim, required on all public pages) ---------- */
+  .dearu-footer {
+    width: 100%;
+    padding: 28px 16px 22px;
+    text-align: center;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    margin-top: 48px;
+  }
+  .dearu-footer-line {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.45);
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .dearu-footer-dot { opacity: 0.5; }
+  .dearu-footer-link {
+    color: rgba(0,0,0,0.55);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .dearu-footer-link:hover {
+    color: rgba(0,0,0,0.85);
+    border-bottom-color: currentColor;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+</header>
+
+<main>
+  <div class="ru-shell">
+    <div id="ru-content" aria-live="polite">
+      <p class="ru-status">Loading your letter…</p>
+    </div>
+  </div>
+</main>
+
+<footer class="dearu-footer">
+  <p class="dearu-footer-line">
+    <span class="dearu-footer-copyright">© <span id="dearu-footer-year"></span> DearU</span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Designed by <a href="#" class="dearu-footer-link">A.I. Mahi</a></span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Developed by <a href="#" class="dearu-footer-link">Fardin Hossain</a></span>
+  </p>
+</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const db = getFirestore(app);
+
+  /* ================= Canonical constants (copy exactly) ================= */
+  const CANVAS = { width: 1414, height: 2000 };
+  const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+  const FONT_SIZE_MIN = 24;
+  const FONT_SIZE_MAX = 48;
+  const CHAR_LIMIT = 1500;
+  const LINE_HEIGHT_FACTOR = 1.5;
+
+  const FONTS = {
+    en: [
+      { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+      { id: "en-elegant-serif", name: "Elegant Serif", family: "'Cormorant Garamond', serif" },
+      { id: "en-editorial-serif", name: "Editorial Serif", family: "'Playfair Display', serif" },
+      { id: "en-clean-sans", name: "Clean Sans", family: "'Inter', sans-serif" },
+      { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+      { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" }
+    ],
+    bn: [
+      { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+      { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+      { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+      { id: "bn-rounded", name: "Baloo Da 2", family: "'Baloo Da 2', sans-serif" },
+      { id: "bn-sans-alt", name: "Noto Sans Bengali", family: "'Noto Sans Bengali', sans-serif" },
+      { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+    ]
+  };
+
+  const INK_PRESETS = [
+    { id: "black", name: "Black Ink", hex: "#1A1A1A" },
+    { id: "dark-brown", name: "Dark Brown", hex: "#4A2E1D" },
+    { id: "navy", name: "Navy Ink", hex: "#1B2A4A" },
+    { id: "deep-red", name: "Deep Red", hex: "#5C1A1A" },
+    { id: "forest-green", name: "Forest Green", hex: "#1F3D2B" },
+    { id: "charcoal", name: "Charcoal", hex: "#2E2E2E" }
+  ];
+
+  /* ================= Canonical Letter Renderer (copy verbatim) ================= */
+  function extractDriveFileId(link) {
+    const patterns = [/\/file\/d\/([a-zA-Z0-9_-]{10,})/, /[?&]id=([a-zA-Z0-9_-]{10,})/];
+    for (const p of patterns) {
+      const m = link.match(p);
+      if (m) return m[1];
+    }
+    return null;
+  }
+  function driveDirectUrl(fileId, size = 2000) {
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
+  }
+
+  function normalizeTo(to) { return to.trim().toLowerCase(); }
+
+  function buildToKeywords(to) {
+    const norm = normalizeTo(to);
+    const keywords = [];
+    for (let i = 1; i <= Math.min(norm.length, 40); i++) keywords.push(norm.slice(0, i));
+    return keywords;
+  }
+
+  function getFontFamily(fontId) {
+    const all = [...FONTS.en, ...FONTS.bn];
+    const found = all.find(f => f.id === fontId);
+    return found ? found.family : FONTS.en[0].family;
+  }
+
+  function buildLetterText(letter) {
+    const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+    if (letter.from && letter.from.trim().length > 0) lines.push(`— ${letter.from.trim()}`);
+    return lines;
+  }
+
+  function wrapParagraph(ctx, text, maxWidth) {
+    const words = text.split(" ");
+    const lines = [];
+    let current = "";
+    for (const word of words) {
+      const test = current ? current + " " + word : word;
+      if (ctx.measureText(test).width > maxWidth && current) { lines.push(current); current = word; }
+      else current = test;
+    }
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  function buildWrappedLines(ctx, letter, fontSize) {
+    ctx.font = `${fontSize}px ${getFontFamily(letter.fontId)}`;
+    const wrapped = [];
+    buildLetterText(letter).forEach(line => {
+      if (line === "") { wrapped.push(""); return; }
+      wrapParagraph(ctx, line, LETTER_AREA.width).forEach(l => wrapped.push(l));
+    });
+    return wrapped;
+  }
+
+  function checkOverflow(ctx, letter) {
+    const wrapped = buildWrappedLines(ctx, letter, letter.fontSize);
+    const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+    const totalHeight = wrapped.length * lineHeight;
+    return { fits: totalHeight <= LETTER_AREA.height, usedHeight: totalHeight, lines: wrapped, lineHeight };
+  }
+
+  function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+  }
+  function isLowContrast(inkHex, backgroundTone) {
+    const rgb = hexToRgb(inkHex);
+    const luminance = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+    return backgroundTone === "light" ? luminance > 0.55 : luminance < 0.45;
+  }
+
+  function renderLetterDOM(container, letter, scale = 1) {
+    container.style.position = "relative";
+    container.style.width = `${CANVAS.width * scale}px`;
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+    container.style.backgroundSize = "cover";
+    container.innerHTML = "";
+    const textBox = document.createElement("div");
+    Object.assign(textBox.style, {
+      position: "absolute",
+      left: `${LETTER_AREA.left * scale}px`,
+      top: `${LETTER_AREA.top * scale}px`,
+      width: `${LETTER_AREA.width * scale}px`,
+      height: `${LETTER_AREA.height * scale}px`,
+      fontFamily: getFontFamily(letter.fontId),
+      fontSize: `${letter.fontSize * scale}px`,
+      lineHeight: LINE_HEIGHT_FACTOR,
+      color: letter.inkColor,
+      textAlign: letter.alignment,
+      whiteSpace: "pre-wrap",
+      overflow: "hidden"
+    });
+    textBox.textContent = buildLetterText(letter).join("\n");
+    container.appendChild(textBox);
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  async function renderLetterCanvas(letter, branding) {
+    const canvas = document.createElement("canvas");
+    canvas.width = CANVAS.width;
+    canvas.height = CANVAS.height;
+    const ctx = canvas.getContext("2d");
+    const bgImg = await loadImage(letter.themeImageUrl);
+    ctx.drawImage(bgImg, 0, 0, CANVAS.width, CANVAS.height);
+    ctx.fillStyle = letter.inkColor;
+    ctx.textBaseline = "top";
+    const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+    const lines = buildWrappedLines(ctx, letter, letter.fontSize);
+    let y = LETTER_AREA.top;
+    lines.forEach(line => {
+      let x = LETTER_AREA.left;
+      if (letter.alignment === "center") { ctx.textAlign = "center"; x = LETTER_AREA.left + LETTER_AREA.width / 2; }
+      else if (letter.alignment === "right") { ctx.textAlign = "right"; x = LETTER_AREA.left + LETTER_AREA.width; }
+      else ctx.textAlign = "left";
+      ctx.fillText(line, x, y);
+      y += lineHeight;
+    });
+    if (branding && branding.watermarkEnabled && branding.logoUrl) {
+      const logoImg = await loadImage(branding.logoUrl);
+      const w = branding.watermarkSize || 220;
+      const h = w * (logoImg.height / logoImg.width);
+      let lx = (CANVAS.width - w) / 2;
+      if (branding.watermarkPosition === "bottom-left") lx = 60;
+      if (branding.watermarkPosition === "bottom-right") lx = CANVAS.width - w - 60;
+      const ly = CANVAS.height - h - 60;
+      ctx.globalAlpha = branding.watermarkOpacity ?? 0.8;
+      ctx.drawImage(logoImg, lx, ly, w, h);
+      ctx.globalAlpha = 1;
+      if (branding.websiteUrl) {
+        ctx.font = "28px 'Inter', sans-serif";
+        ctx.fillStyle = "#00000099";
+        ctx.textAlign = "center";
+        ctx.fillText(branding.websiteUrl, CANVAS.width / 2, ly + h + 10);
+      }
+    }
+    return canvas;
+  }
+
+  /* ================= Page logic ================= */
+  const contentEl = document.getElementById('ru-content');
+  const params = new URLSearchParams(window.location.search);
+  const letterId = params.get('id');
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function setContent(html) {
+    contentEl.innerHTML = html;
+  }
+
+  function showLoading() {
+    setContent(`<p class="ru-status">Loading your letter…</p>`);
+  }
+
+  function showError(message) {
+    setContent(`
+      <div class="ru-error">
+        <h1 class="ru-heading">We couldn't find that letter.</h1>
+        <p class="ru-sub">${message}</p>
+        <a href="index.html" class="ru-btn ru-btn-primary">Return home</a>
+      </div>
+    `);
+  }
+
+  function computePreviewScale() {
+    const maxWidth = Math.min(380, window.innerWidth - 64);
+    return maxWidth / CANVAS.width;
+  }
+
+  function flashCopied(btn) {
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    btn.classList.add('is-copied');
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove('is-copied');
+    }, 1800);
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (err) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        return true;
+      } catch (err2) {
+        console.error(err2);
+        return false;
+      }
+    }
+  }
+
+  function renderSuccess(letter) {
+    const shareUrl = `${window.location.origin}/letter.html?id=${encodeURIComponent(letterId)}`;
+    const openUrl = `letter.html?id=${encodeURIComponent(letterId)}`;
+    const searchUrl = `search.html?q=${encodeURIComponent(letter.to || '')}`;
+    const toDisplay = letter.to ? escapeHtml(letter.to) : '';
+
+    setContent(`
+      <div class="ru-success">
+        <h1 class="ru-heading">Your letter has been released.</h1>
+        <p class="ru-sub">${toDisplay ? `It's public now — anyone who searches "${toDisplay}" can find it.` : "It's public now."}</p>
+
+        <div class="ru-preview-wrap">
+          <div id="ru-preview" class="ru-preview"></div>
+        </div>
+
+        <div class="ru-share">
+          <span class="ru-share-label">Shareable link</span>
+          <div class="ru-share-row">
+            <span class="ru-share-url" title="${escapeHtml(shareUrl)}">${escapeHtml(shareUrl)}</span>
+            <button type="button" class="ru-btn ru-btn-outline" id="ru-copy-btn">Copy link</button>
+          </div>
+        </div>
+
+        <a href="${openUrl}" class="ru-btn ru-btn-primary">Open letter</a>
+
+        <p class="ru-note">
+          This letter can't be edited or deleted, and there's no dashboard for it.
+          If this link is ever lost, searching${toDisplay ? ` <a href="${searchUrl}" class="ru-inline-link">${toDisplay}</a>` : " the recipient's name"} is the only way back to it.
+        </p>
+      </div>
+    `);
+
+    const previewEl = document.getElementById('ru-preview');
+    renderLetterDOM(previewEl, letter, computePreviewScale());
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        renderLetterDOM(previewEl, letter, computePreviewScale());
+      }, 150);
+    });
+
+    document.getElementById('ru-copy-btn').addEventListener('click', async (e) => {
+      const ok = await copyToClipboard(shareUrl);
+      if (ok) flashCopied(e.currentTarget);
+    });
+  }
+
+  async function loadLetter() {
+    if (!letterId) {
+      showError("No letter was specified in this link.");
+      return;
+    }
+
+    showLoading();
+
+    let letterSnap;
+    try {
+      letterSnap = await getDoc(doc(db, 'letters', letterId));
+    } catch (err) {
+      console.error(err);
+      showError("This link may be broken, or the letter may no longer be public.");
+      return;
+    }
+
+    if (!letterSnap.exists()) {
+      showError("This link may be broken, or the letter may no longer be public.");
+      return;
+    }
+
+    const letterData = letterSnap.data();
+    let themeImageUrl = "";
+
+    if (letterData.themeId) {
+      try {
+        const themeSnap = await getDoc(doc(db, 'themes', letterData.themeId));
+        if (themeSnap.exists()) themeImageUrl = themeSnap.data().imageUrl || "";
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    renderSuccess({ ...letterData, themeImageUrl });
+  }
+
+  loadLetter();
+
+  document.getElementById('dearu-footer-year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

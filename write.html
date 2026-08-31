@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Write a Letter · DearU</title>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Special+Elite&family=Source+Serif+4:wght@400;600&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Mina:wght@400;700&family=Atma&display=swap">
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --ink: #2b2924;
+    --muted: rgba(0,0,0,0.5);
+    --muted-light: rgba(0,0,0,0.35);
+    --line: rgba(0,0,0,0.1);
+    --accent: #2b2924;
+    --danger: #7a2e2e;
+    --danger-bg: #f7ecec;
+    --warn-bg: #fbf3e2;
+    --warn-text: #6b4e12;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  header.site-header {
+    width: 100%;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .wordmark { display: inline-flex; align-items: center; }
+  .wordmark img { display: block; }
+
+  /* Layout */
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+    display: grid;
+    grid-template-columns: minmax(280px, 420px) 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 880px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  /* Editor column */
+  .editor {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .step-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-light);
+  }
+  .step-progress .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+  }
+  .step-progress .dot.active { background: var(--ink); }
+  .step-progress .dot.done { background: rgba(0,0,0,0.4); }
+
+  .step-panel { display: none; flex-direction: column; gap: 18px; }
+  .step-panel.active { display: flex; }
+
+  h2.step-title { font-size: 15px; font-weight: 600; margin: 0; color: var(--ink); }
+  p.step-hint { margin: -10px 0 0; font-size: 13px; color: var(--muted); }
+
+  /* Theme grid */
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .theme-thumb {
+    position: relative;
+    aspect-ratio: 1414 / 2000;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    background-size: cover;
+    background-position: center;
+    background-color: #eee;
+  }
+  .theme-thumb.selected { border-color: var(--ink); }
+  .theme-empty { font-size: 13px; color: var(--muted); }
+
+  /* Form fields */
+  label.field-label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+  input[type="text"], textarea, select {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+  }
+  textarea { min-height: 220px; resize: vertical; line-height: 1.5; }
+  .field { margin-bottom: 2px; }
+
+  .salutation-toggle {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .salutation-toggle button {
+    border: none;
+    background: #fff;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .salutation-toggle button.active { background: var(--ink); color: #fff; }
+
+  .char-counter { font-size: 12px; color: var(--muted-light); text-align: right; }
+  .char-counter.over { color: var(--danger); }
+
+  /* Style step */
+  .font-list { display: flex; flex-direction: column; gap: 16px; }
+  .font-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-light);
+    margin-bottom: 8px;
+  }
+  .font-options { display: flex; flex-direction: column; gap: 8px; }
+  .font-option {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .font-option:hover { border-color: rgba(0,0,0,0.25); }
+  .font-option.selected { border-color: var(--ink); background: #f2efe8; }
+  .font-option-name { font-size: 11px; color: var(--muted); }
+  .font-option-preview {
+    font-size: 22px;
+    line-height: 1.25;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ink-swatches { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .swatch {
+    width: 28px; height: 28px; border-radius: 50%;
+    cursor: pointer; border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+  }
+  .swatch.selected { border-color: var(--ink); }
+  .swatch-custom {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px dashed rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--muted); cursor: pointer; background: #fff;
+  }
+  .swatch-custom.selected { border-color: var(--ink); border-style: solid; }
+  input[type="color"] { width: 36px; height: 28px; border: none; padding: 0; background: none; cursor: pointer; }
+
+  .align-group { display: inline-flex; gap: 8px; }
+  .align-group button {
+    width: 34px; height: 34px;
+    border: 1px solid var(--line);
+    background: #fff; border-radius: 6px; cursor: pointer;
+    font-size: 13px; color: var(--muted);
+  }
+  .align-group button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .size-slider-row { display: flex; align-items: center; gap: 10px; }
+  .size-slider-row span { font-size: 13px; color: var(--muted); }
+  input[type="range"] { flex: 1; }
+
+  /* Nav buttons */
+  .step-nav { display: flex; justify-content: space-between; margin-top: 6px; }
+  .btn {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+  .btn.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .overflow-warning {
+    font-size: 13px;
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .contrast-warning {
+    font-size: 13px;
+    color: var(--warn-text);
+    background: var(--warn-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .contrast-warning button {
+    background: none; border: none; cursor: pointer;
+    color: var(--warn-text); font-size: 14px; line-height: 1;
+  }
+  .submit-error {
+    font-size: 13px;
+    color: var(--danger);
+  }
+
+  /* Preview column */
+  .preview-col {
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .preview-frame {
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 1414 / 2000;
+    background: #eee;
+    border-radius: 4px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .preview-inner { width: 100%; height: 100%; }
+  .preview-hint { font-size: 12px; color: var(--muted-light); text-align: center; }
+
+  /* Footer (public page) */
+  .dearu-footer {
+    width: 100%;
+    padding: 28px 16px 22px;
+    text-align: center;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    margin-top: 48px;
+  }
+  .dearu-footer-line {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.45);
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .dearu-footer-dot { opacity: 0.5; }
+  .dearu-footer-link {
+    color: rgba(0,0,0,0.55);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .dearu-footer-link:hover {
+    color: rgba(0,0,0,0.85);
+    border-bottom-color: currentColor;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+</header>
+
+<main>
+  <section class="editor">
+    <div class="step-progress" id="stepProgress">
+      <span class="dot active" data-step="1"></span> Theme
+      <span class="dot" data-step="2"></span> Content
+      <span class="dot" data-step="3"></span> Style
+    </div>
+
+    <!-- Step 1: Theme -->
+    <div class="step-panel active" data-step="1">
+      <h2 class="step-title">Choose a theme</h2>
+      <p class="step-hint">This sets the background of your letter.</p>
+      <div class="theme-grid" id="themeGrid">
+        <div class="theme-empty">Loading themes…</div>
+      </div>
+      <div class="step-nav">
+        <span></span>
+        <button class="btn primary" id="toStep2" disabled>Next</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Content -->
+    <div class="step-panel" data-step="2">
+      <h2 class="step-title">Write your letter</h2>
+
+      <div class="field">
+        <label class="field-label" for="toInput">To</label>
+        <input type="text" id="toInput" placeholder="Who is this letter for?">
+      </div>
+
+      <div class="field">
+        <label class="field-label">Salutation</label>
+        <div class="salutation-toggle">
+          <button type="button" class="active" data-salutation="Dear">Dear</button>
+          <button type="button" data-salutation="প্রিয়">প্রিয়</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="fromInput">From <span style="opacity:0.6;">(optional)</span></label>
+        <input type="text" id="fromInput" placeholder="A well-wisher">
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="bodyInput">Your letter</label>
+        <textarea id="bodyInput" maxlength="1500" placeholder="Write what you want to say…"></textarea>
+        <div class="char-counter" id="charCounter">0 / 1500</div>
+      </div>
+
+      <div id="overflowWarning" class="overflow-warning" style="display:none;"></div>
+
+      <div class="step-nav">
+        <button class="btn" id="toStep1From2">Back</button>
+        <button class="btn primary" id="toStep3" disabled>Next</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Style -->
+    <div class="step-panel" data-step="3">
+      <h2 class="step-title">Style your letter</h2>
+
+      <div class="field">
+        <label class="field-label">Font</label>
+        <div class="font-list" id="fontList">
+          <div>
+            <div class="font-group-label">English</div>
+            <div class="font-options" id="fontOptionsEn"></div>
+          </div>
+          <div>
+            <div class="font-group-label">বাংলা</div>
+            <div class="font-options" id="fontOptionsBn"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Ink color</label>
+        <div class="ink-swatches" id="inkSwatches">
+          <span class="swatch-custom" id="customSwatchToggle" title="Custom color">+</span>
+          <input type="color" id="customColorInput" style="display:none;">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Alignment</label>
+        <div class="align-group" id="alignGroup">
+          <button type="button" data-align="left" class="active" title="Left">L</button>
+          <button type="button" data-align="center" title="Center">C</button>
+          <button type="button" data-align="right" title="Right">R</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Font size</label>
+        <div class="size-slider-row">
+          <span>A-</span>
+          <input type="range" id="fontSizeSlider" min="24" max="48" value="30">
+          <span>A+</span>
+        </div>
+      </div>
+
+      <div id="contrastWarning" class="contrast-warning" style="display:none;">
+        <span>This color may be difficult to read on this theme.</span>
+        <button type="button" id="dismissContrast" aria-label="Dismiss">✕</button>
+      </div>
+
+      <div id="overflowWarning3" class="overflow-warning" style="display:none;"></div>
+      <div id="submitError" class="submit-error" style="display:none;"></div>
+
+      <div class="step-nav">
+        <button class="btn" id="toStep2From3">Back</button>
+        <button class="btn primary" id="submitBtn" disabled>Release letter</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="preview-col">
+    <div class="preview-frame">
+      <div class="preview-inner" id="previewEl"></div>
+    </div>
+    <p class="preview-hint">Live preview — this is exactly how your letter will look.</p>
+  </section>
+</main>
+
+<footer class="dearu-footer">
+  <p class="dearu-footer-line">
+    <span class="dearu-footer-copyright">© <span id="dearu-footer-year"></span> DearU</span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Designed by <a href="#" class="dearu-footer-link">A.I. Mahi</a></span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Developed by <a href="#" class="dearu-footer-link">Fardin Hossain</a></span>
+  </p>
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import {
+  getFirestore, collection, query, where, orderBy, getDocs, addDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
+
+// ---------- Canonical constants (copied verbatim) ----------
+const CANVAS = { width: 1414, height: 2000 };
+const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+const FONT_SIZE_MIN = 24;
+const FONT_SIZE_MAX = 48;
+const CHAR_LIMIT = 1500;
+const LINE_HEIGHT_FACTOR = 1.5;
+
+const FONTS = {
+  en: [
+    { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+    { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+    { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" },
+    { id: "en-special-elite", name: "Special Elite", family: "'Special Elite', monospace" },
+    { id: "en-source-serif", name: "Source Serif 4", family: "'Source Serif 4', serif" }
+  ],
+  bn: [
+    { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+    { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+    { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+    { id: "bn-mina", name: "Mina", family: "'Mina', sans-serif" },
+    { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+  ]
+};
+
+const INK_PRESETS = [
+  { id: "black", name: "Black Ink", hex: "#1A1A1A" },
+  { id: "dark-brown", name: "Dark Brown", hex: "#4A2E1D" },
+  { id: "navy", name: "Navy Ink", hex: "#1B2A4A" },
+  { id: "deep-red", name: "Deep Red", hex: "#5C1A1A" },
+  { id: "forest-green", name: "Forest Green", hex: "#1F3D2B" },
+  { id: "charcoal", name: "Charcoal", hex: "#2E2E2E" }
+];
+
+// ---------- Canonical Letter Renderer (copied verbatim) ----------
+function extractDriveFileId(link) {
+  const patterns = [/\/file\/d\/([a-zA-Z0-9_-]{10,})/, /[?&]id=([a-zA-Z0-9_-]{10,})/];
+  for (const p of patterns) {
+    const m = link.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+function driveDirectUrl(fileId, size = 2000) {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
+}
+
+function normalizeTo(to) { return to.trim().toLowerCase(); }
+
+function buildToKeywords(to) {
+  const norm = normalizeTo(to);
+  const keywords = [];
+  for (let i = 1; i <= Math.min(norm.length, 40); i++) keywords.push(norm.slice(0, i));
+  return keywords;
+}
+
+function getFontFamily(fontId) {
+  const all = [...FONTS.en, ...FONTS.bn];
+  const found = all.find(f => f.id === fontId);
+  return found ? found.family : FONTS.en[0].family;
+}
+
+function buildLetterText(letter) {
+  const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+  if (letter.from && letter.from.trim().length > 0) lines.push(`— ${letter.from.trim()}`);
+  return lines;
+}
+
+function wrapParagraph(ctx, text, maxWidth) {
+  const words = text.split(" ");
+  const lines = [];
+  let current = "";
+  for (const word of words) {
+    const test = current ? current + " " + word : word;
+    if (ctx.measureText(test).width > maxWidth && current) { lines.push(current); current = word; }
+    else current = test;
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function buildWrappedLines(ctx, letter, fontSize) {
+  ctx.font = `${fontSize}px ${getFontFamily(letter.fontId)}`;
+  const wrapped = [];
+  buildLetterText(letter).forEach(line => {
+    if (line === "") { wrapped.push(""); return; }
+    wrapParagraph(ctx, line, LETTER_AREA.width).forEach(l => wrapped.push(l));
+  });
+  return wrapped;
+}
+
+function checkOverflow(ctx, letter) {
+  const wrapped = buildWrappedLines(ctx, letter, letter.fontSize);
+  const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+  const totalHeight = wrapped.length * lineHeight;
+  return { fits: totalHeight <= LETTER_AREA.height, usedHeight: totalHeight, lines: wrapped, lineHeight };
+}
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+}
+function isLowContrast(inkHex, backgroundTone) {
+  const rgb = hexToRgb(inkHex);
+  const luminance = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+  return backgroundTone === "light" ? luminance > 0.55 : luminance < 0.45;
+}
+
+function renderLetterDOM(container, letter, scale = 1) {
+  container.style.position = "relative";
+  container.style.width = `${CANVAS.width * scale}px`;
+  container.style.height = `${CANVAS.height * scale}px`;
+  container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+  container.style.backgroundSize = "cover";
+  container.innerHTML = "";
+  const textBox = document.createElement("div");
+  Object.assign(textBox.style, {
+    position: "absolute",
+    left: `${LETTER_AREA.left * scale}px`,
+    top: `${LETTER_AREA.top * scale}px`,
+    width: `${LETTER_AREA.width * scale}px`,
+    height: `${LETTER_AREA.height * scale}px`,
+    fontFamily: getFontFamily(letter.fontId),
+    fontSize: `${letter.fontSize * scale}px`,
+    lineHeight: LINE_HEIGHT_FACTOR,
+    color: letter.inkColor,
+    textAlign: letter.alignment,
+    whiteSpace: "pre-wrap",
+    overflow: "hidden"
+  });
+  textBox.textContent = buildLetterText(letter).join("\n");
+  container.appendChild(textBox);
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function renderLetterCanvas(letter, branding) {
+  const canvas = document.createElement("canvas");
+  canvas.width = CANVAS.width;
+  canvas.height = CANVAS.height;
+  const ctx = canvas.getContext("2d");
+  const bgImg = await loadImage(letter.themeImageUrl);
+  ctx.drawImage(bgImg, 0, 0, CANVAS.width, CANVAS.height);
+  ctx.fillStyle = letter.inkColor;
+  ctx.textBaseline = "top";
+  const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+  const lines = buildWrappedLines(ctx, letter, letter.fontSize);
+  let y = LETTER_AREA.top;
+  lines.forEach(line => {
+    let x = LETTER_AREA.left;
+    if (letter.alignment === "center") { ctx.textAlign = "center"; x = LETTER_AREA.left + LETTER_AREA.width / 2; }
+    else if (letter.alignment === "right") { ctx.textAlign = "right"; x = LETTER_AREA.left + LETTER_AREA.width; }
+    else ctx.textAlign = "left";
+    ctx.fillText(line, x, y);
+    y += lineHeight;
+  });
+  if (branding && branding.watermarkEnabled && branding.logoUrl) {
+    const logoImg = await loadImage(branding.logoUrl);
+    const w = branding.watermarkSize || 220;
+    const h = w * (logoImg.height / logoImg.width);
+    let lx = (CANVAS.width - w) / 2;
+    if (branding.watermarkPosition === "bottom-left") lx = 60;
+    if (branding.watermarkPosition === "bottom-right") lx = CANVAS.width - w - 60;
+    const ly = CANVAS.height - h - 60;
+    ctx.globalAlpha = branding.watermarkOpacity ?? 0.8;
+    ctx.drawImage(logoImg, lx, ly, w, h);
+    ctx.globalAlpha = 1;
+    if (branding.websiteUrl) {
+      ctx.font = "28px 'Inter', sans-serif";
+      ctx.fillStyle = "#00000099";
+      ctx.textAlign = "center";
+      ctx.fillText(branding.websiteUrl, CANVAS.width / 2, ly + h + 10);
+    }
+  }
+  return canvas;
+}
+
+document.getElementById('dearu-footer-year').textContent = new Date().getFullYear();
+
+// ---------- Page state ----------
+const state = {
+  themeId: null,
+  themeImageUrl: null,
+  backgroundTone: null,
+  to: "",
+  from: "",
+  salutation: "Dear",
+  body: "",
+  fontId: FONTS.en[0].id,
+  inkColor: INK_PRESETS[0].hex,
+  alignment: "left",
+  fontSize: 30
+};
+
+let currentStep = 1;
+let contrastDismissed = false;
+let themes = [];
+
+const offscreenCanvas = document.createElement("canvas");
+const offscreenCtx = offscreenCanvas.getContext("2d");
+
+const previewEl = document.getElementById('previewEl');
+const previewFrame = document.querySelector('.preview-frame');
+
+function currentScale() {
+  return previewFrame.getBoundingClientRect().width / CANVAS.width;
+}
+
+function updatePreview() {
+  if (!state.themeImageUrl) return;
+  renderLetterDOM(previewEl, state, currentScale());
+}
+
+function runOverflowCheck() {
+  if (!state.body) return { fits: true };
+  return checkOverflow(offscreenCtx, state);
+}
+
+function refreshOverflowUI() {
+  const result = runOverflowCheck();
+  const msg = "Your letter doesn't fit in the selected writing area. Try: reducing the font size, choosing a more compact font, or shortening the letter.";
+  const box2 = document.getElementById('overflowWarning');
+  const box3 = document.getElementById('overflowWarning3');
+  if (!result.fits) {
+    box2.textContent = msg;
+    box2.style.display = 'block';
+    box3.textContent = msg;
+    box3.style.display = 'block';
+  } else {
+    box2.style.display = 'none';
+    box3.style.display = 'none';
+  }
+  return result.fits;
+}
+
+function refreshContrastUI() {
+  const warningEl = document.getElementById('contrastWarning');
+  if (contrastDismissed || !state.backgroundTone) {
+    warningEl.style.display = 'none';
+    return;
+  }
+  if (isLowContrast(state.inkColor, state.backgroundTone)) {
+    warningEl.style.display = 'flex';
+  } else {
+    warningEl.style.display = 'none';
+  }
+}
+
+function validateAndRefresh() {
+  updatePreview();
+  const fits = refreshOverflowUI();
+  refreshContrastUI();
+  updateCharCounter();
+  updateNextButtons(fits);
+  return fits;
+}
+
+function updateCharCounter() {
+  const counter = document.getElementById('charCounter');
+  counter.textContent = `${state.body.length} / ${CHAR_LIMIT}`;
+  counter.classList.toggle('over', state.body.length >= CHAR_LIMIT);
+}
+
+function updateNextButtons(fits) {
+  const to2 = document.getElementById('toStep2');
+  to2.disabled = !state.themeId;
+
+  const to3 = document.getElementById('toStep3');
+  const contentValid = state.to.trim().length > 0 && state.body.trim().length > 0 && fits;
+  to3.disabled = !contentValid;
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = !contentValid;
+}
+
+// ---------- Step navigation ----------
+function goToStep(step) {
+  currentStep = step;
+  document.querySelectorAll('.step-panel').forEach(p => {
+    p.classList.toggle('active', Number(p.dataset.step) === step);
+  });
+  document.querySelectorAll('.step-progress .dot').forEach(d => {
+    const s = Number(d.dataset.step);
+    d.classList.toggle('active', s === step);
+    d.classList.toggle('done', s < step);
+  });
+  updatePreview();
+}
+
+document.getElementById('toStep2').addEventListener('click', () => goToStep(2));
+document.getElementById('toStep1From2').addEventListener('click', () => goToStep(1));
+document.getElementById('toStep3').addEventListener('click', () => goToStep(3));
+document.getElementById('toStep2From3').addEventListener('click', () => goToStep(2));
+
+// ---------- Step 1: Theme ----------
+async function loadThemes() {
+  const grid = document.getElementById('themeGrid');
+  try {
+    // Requires composite index: themes (active ASC, order ASC)
+    const q = query(
+      collection(db, 'themes'),
+      where('active', '==', true),
+      orderBy('order')
+    );
+    const snap = await getDocs(q);
+    themes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (themes.length === 0) {
+      grid.innerHTML = '<div class="theme-empty">No themes available yet.</div>';
+      return;
+    }
+
+    grid.innerHTML = '';
+    themes.forEach(theme => {
+      const thumb = document.createElement('div');
+      thumb.className = 'theme-thumb';
+      thumb.style.backgroundImage = `url(${theme.thumbnailUrl || theme.imageUrl})`;
+      thumb.dataset.themeId = theme.id;
+      thumb.addEventListener('click', () => selectTheme(theme));
+      grid.appendChild(thumb);
+    });
+  } catch (err) {
+    grid.innerHTML = '<div class="theme-empty">Couldn\'t load themes. Please refresh the page.</div>';
+  }
+}
+
+function selectTheme(theme) {
+  state.themeId = theme.id;
+  state.themeImageUrl = theme.imageUrl;
+  state.backgroundTone = theme.backgroundTone;
+  contrastDismissed = false;
+  document.querySelectorAll('.theme-thumb').forEach(t => {
+    t.classList.toggle('selected', t.dataset.themeId === theme.id);
+  });
+  validateAndRefresh();
+}
+
+// ---------- Step 2: Content ----------
+document.getElementById('toInput').addEventListener('input', (e) => {
+  state.to = e.target.value;
+  validateAndRefresh();
+});
+
+document.getElementById('fromInput').addEventListener('input', (e) => {
+  state.from = e.target.value;
+  validateAndRefresh();
+});
+
+document.getElementById('bodyInput').addEventListener('input', (e) => {
+  state.body = e.target.value.slice(0, CHAR_LIMIT);
+  validateAndRefresh();
+});
+
+document.querySelectorAll('.salutation-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.salutation-toggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.salutation = btn.dataset.salutation;
+    validateAndRefresh();
+  });
+});
+
+// Placeholder locale hint for "From" field, matches chosen salutation script
+function updateFromPlaceholder() {
+  const fromInput = document.getElementById('fromInput');
+  fromInput.placeholder = state.salutation === 'প্রিয়' ? 'একজন শুভাকাঙ্ক্ষী' : 'A well-wisher';
+}
+document.querySelectorAll('.salutation-toggle button').forEach(btn => {
+  btn.addEventListener('click', updateFromPlaceholder);
+});
+
+// ---------- Step 3: Style ----------
+function populateFontOptions() {
+  const enContainer = document.getElementById('fontOptionsEn');
+  const bnContainer = document.getElementById('fontOptionsBn');
+  const enSample = 'Dear friend,';
+  const bnSample = 'প্রিয় বন্ধু,';
+
+  function buildFontOption(font, sampleText) {
+    const opt = document.createElement('div');
+    opt.className = 'font-option';
+    opt.dataset.fontId = font.id;
+    if (font.id === state.fontId) opt.classList.add('selected');
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'font-option-name';
+    nameEl.textContent = font.name;
+
+    const previewEl = document.createElement('div');
+    previewEl.className = 'font-option-preview';
+    previewEl.style.fontFamily = font.family;
+    previewEl.textContent = sampleText;
+
+    opt.appendChild(nameEl);
+    opt.appendChild(previewEl);
+
+    opt.addEventListener('click', () => {
+      state.fontId = font.id;
+      document.querySelectorAll('.font-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      validateAndRefresh();
+    });
+
+    return opt;
+  }
+
+  FONTS.en.forEach(f => enContainer.appendChild(buildFontOption(f, enSample)));
+  FONTS.bn.forEach(f => bnContainer.appendChild(buildFontOption(f, bnSample)));
+}
+populateFontOptions();
+
+function populateInkSwatches() {
+  const container = document.getElementById('inkSwatches');
+  const customToggle = document.getElementById('customSwatchToggle');
+  INK_PRESETS.forEach(preset => {
+    const swatch = document.createElement('span');
+    swatch.className = 'swatch';
+    swatch.style.background = preset.hex;
+    swatch.title = preset.name;
+    swatch.dataset.hex = preset.hex;
+    if (preset.hex === state.inkColor) swatch.classList.add('selected');
+    swatch.addEventListener('click', () => {
+      state.inkColor = preset.hex;
+      contrastDismissed = false;
+      document.querySelectorAll('.swatch, .swatch-custom').forEach(s => s.classList.remove('selected'));
+      swatch.classList.add('selected');
+      validateAndRefresh();
+    });
+    container.insertBefore(swatch, customToggle);
+  });
+}
+populateInkSwatches();
+
+const customColorInput = document.getElementById('customColorInput');
+document.getElementById('customSwatchToggle').addEventListener('click', () => {
+  customColorInput.style.display = 'inline-block';
+  customColorInput.click();
+});
+customColorInput.addEventListener('input', (e) => {
+  state.inkColor = e.target.value;
+  contrastDismissed = false;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+  document.getElementById('customSwatchToggle').classList.add('selected');
+  validateAndRefresh();
+});
+
+document.getElementById('dismissContrast').addEventListener('click', () => {
+  contrastDismissed = true;
+  document.getElementById('contrastWarning').style.display = 'none';
+});
+
+document.querySelectorAll('#alignGroup button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#alignGroup button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.alignment = btn.dataset.align;
+    validateAndRefresh();
+  });
+});
+
+document.getElementById('fontSizeSlider').addEventListener('input', (e) => {
+  state.fontSize = Number(e.target.value);
+  validateAndRefresh();
+});
+
+// ---------- Submit ----------
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  const submitBtn = document.getElementById('submitBtn');
+  const errorEl = document.getElementById('submitError');
+  errorEl.style.display = 'none';
+
+  const fits = refreshOverflowUI();
+  if (!fits) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Releasing…';
+
+  try {
+    const docData = {
+      to: state.to.trim(),
+      toNormalized: normalizeTo(state.to),
+      toKeywords: buildToKeywords(state.to),
+      from: state.from.trim().length > 0 ? state.from.trim() : null,
+      body: state.body,
+      salutation: state.salutation,
+      themeId: state.themeId,
+      fontId: state.fontId,
+      fontSize: state.fontSize,
+      inkColor: state.inkColor,
+      alignment: state.alignment,
+      status: 'public',
+      createdAt: serverTimestamp()
+    };
+    const ref = await addDoc(collection(db, 'letters'), docData);
+    window.location.href = `released.html?id=${ref.id}`;
+  } catch (err) {
+    errorEl.textContent = 'Something went wrong releasing your letter. Please try again.';
+    errorEl.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Release letter';
+  }
+});
+
+// ---------- Init ----------
+window.addEventListener('resize', updatePreview);
+loadThemes();
+updateFromPlaceholder();
+validateAndRefresh();
+</script>
+</body>
+</html>

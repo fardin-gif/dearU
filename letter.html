@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DearU · Letter</title>
+<link rel="shortcut icon" href="icon.png" type="image/x-icon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F6F3ED;
+    --ink: #2A2723;
+    --muted: rgba(42,39,35,0.55);
+    --faint: rgba(42,39,35,0.35);
+    --line: rgba(42,39,35,0.1);
+    --surface: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- header ---------- */
+  header.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+  }
+
+  .wordmark { display: inline-flex; line-height: 0; }
+
+  nav.menu {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  nav.menu a {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+  }
+  nav.menu a:hover { color: var(--ink); }
+
+  /* ---------- main ---------- */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 20px 40px;
+  }
+
+  .meta-row {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 6px 0 18px;
+    font-size: 13px;
+    color: var(--faint);
+  }
+
+  .meta-to {
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  #letter-slot {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  /* letter frame, always kept at the canvas aspect ratio */
+  .letter-frame {
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1414 / 2000;
+    position: relative;
+    background: var(--surface);
+    box-shadow: 0 20px 60px -30px rgba(0,0,0,0.35);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .letter-frame .render-target {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .state-box {
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1414 / 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--faint);
+    font-size: 15px;
+    padding: 40px;
+  }
+
+  /* ---------- actions ---------- */
+  .actions {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    padding: 11px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .btn:hover { border-color: rgba(42,39,35,0.3); background: rgba(42,39,35,0.03); }
+  .btn.quiet { color: var(--faint); border-color: transparent; }
+  .btn.quiet:hover { color: var(--muted); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+
+  .status-line {
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    color: var(--faint);
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  /* ---------- report modal ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,18,16,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 26px 24px;
+  }
+  .modal h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .modal p.hint {
+    font-size: 13px;
+    color: var(--faint);
+    margin: 0 0 18px;
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field select, .field textarea {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--ink);
+    resize: vertical;
+  }
+  .field textarea { min-height: 70px; }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  /* ---------- footer (public pages) ---------- */
+  .dearu-footer {
+    width: 100%;
+    padding: 28px 16px 22px;
+    text-align: center;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    margin-top: 48px;
+  }
+  .dearu-footer-line {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.45);
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .dearu-footer-dot { opacity: 0.5; }
+  .dearu-footer-link {
+    color: rgba(0,0,0,0.55);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .dearu-footer-link:hover {
+    color: rgba(0,0,0,0.85);
+    border-bottom-color: currentColor;
+  }
+
+  @media (max-width: 480px) {
+    header.topbar { padding: 14px 16px; }
+    nav.menu { gap: 14px; }
+    .actions { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+  <nav class="menu">
+    <a href="index.html">Home</a>
+    <a href="write.html">Write</a>
+    <a href="search.html">Search</a>
+  </nav>
+</header>
+
+<main>
+  <div id="meta-row" class="meta-row" style="display:none;">
+    <span class="meta-to" id="meta-to"></span>
+    <span id="meta-time"></span>
+  </div>
+
+  <div id="letter-slot"></div>
+
+  <div id="actions" class="actions" style="display:none;">
+    <button class="btn quiet" id="report-btn">Report this letter</button>
+  </div>
+
+  <p class="status-line" id="status-line"></p>
+</main>
+
+<div class="modal-overlay" id="report-overlay">
+  <div class="modal">
+    <h2>Report this letter</h2>
+    <p class="hint">Let us know what's wrong. Reports are reviewed privately.</p>
+    <form id="report-form">
+      <div class="field">
+        <label for="reason">Reason</label>
+        <select id="reason" required>
+          <option value="" disabled selected>Select a reason</option>
+          <option value="harassment">Harassment or bullying</option>
+          <option value="hate">Hate speech</option>
+          <option value="personal-info">Personal information / doxxing</option>
+          <option value="spam">Spam or misuse</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="details">Details (optional)</label>
+        <textarea id="details" placeholder="Anything that would help us understand"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn quiet" id="report-cancel">Cancel</button>
+        <button type="submit" class="btn" id="report-submit">Send report</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<footer class="dearu-footer">
+  <p class="dearu-footer-line">
+    <span class="dearu-footer-copyright">© <span id="dearu-footer-year"></span> DearU</span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Designed by <a href="#" class="dearu-footer-link">A.I. Mahi</a></span>
+    <span class="dearu-footer-dot">·</span>
+    <span class="dearu-footer-credit">Developed by <a href="#" class="dearu-footer-link">Fardin Hossain</a></span>
+  </p>
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, addDoc, collection, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ===================== Canonical constants ===================== */
+const CANVAS = { width: 1414, height: 2000 };
+const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+const FONT_SIZE_MIN = 24;
+const FONT_SIZE_MAX = 48;
+const CHAR_LIMIT = 1500;
+const LINE_HEIGHT_FACTOR = 1.5;
+
+const FONTS = {
+  en: [
+    { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+    { id: "en-elegant-serif", name: "Elegant Serif", family: "'Cormorant Garamond', serif" },
+    { id: "en-editorial-serif", name: "Editorial Serif", family: "'Playfair Display', serif" },
+    { id: "en-clean-sans", name: "Clean Sans", family: "'Inter', sans-serif" },
+    { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+    { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" }
+  ],
+  bn: [
+    { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+    { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+    { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+    { id: "bn-rounded", name: "Baloo Da 2", family: "'Baloo Da 2', sans-serif" },
+    { id: "bn-sans-alt", name: "Noto Sans Bengali", family: "'Noto Sans Bengali', sans-serif" },
+    { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+  ]
+};
+
+const INK_PRESETS = [
+  { id: "black", name: "Black Ink", hex: "#1A1A1A" },
+  { id: "dark-brown", name: "Dark Brown", hex: "#4A2E1D" },
+  { id: "navy", name: "Navy Ink", hex: "#1B2A4A" },
+  { id: "deep-red", name: "Deep Red", hex: "#5C1A1A" },
+  { id: "forest-green", name: "Forest Green", hex: "#1F3D2B" },
+  { id: "charcoal", name: "Charcoal", hex: "#2E2E2E" }
+];
+
+/* ===================== Canonical Letter Renderer ===================== */
+function extractDriveFileId(link) {
+  const patterns = [/\/file\/d\/([a-zA-Z0-9_-]{10,})/, /[?&]id=([a-zA-Z0-9_-]{10,})/];
+  for (const p of patterns) {
+    const m = link.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+function driveDirectUrl(fileId, size = 2000) {
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
+}
+
+function normalizeTo(to) { return to.trim().toLowerCase(); }
+
+function buildToKeywords(to) {
+  const norm = normalizeTo(to);
+  const keywords = [];
+  for (let i = 1; i <= Math.min(norm.length, 40); i++) keywords.push(norm.slice(0, i));
+  return keywords;
+}
+
+function getFontFamily(fontId) {
+  const all = [...FONTS.en, ...FONTS.bn];
+  const found = all.find(f => f.id === fontId);
+  return found ? found.family : FONTS.en[0].family;
+}
+
+function buildLetterText(letter) {
+  const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+  const signOff = (letter.from && letter.from.trim().length > 0)
+    ? letter.from.trim()
+    : "A well-wisher";
+  lines.push(`— ${signOff}`);
+  return lines;
+}
+
+function wrapParagraph(ctx, text, maxWidth) {
+  const words = text.split(" ");
+  const lines = [];
+  let current = "";
+  for (const word of words) {
+    const test = current ? current + " " + word : word;
+    if (ctx.measureText(test).width > maxWidth && current) { lines.push(current); current = word; }
+    else current = test;
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function buildWrappedLines(ctx, letter, fontSize) {
+  ctx.font = `${fontSize}px ${getFontFamily(letter.fontId)}`;
+  const wrapped = [];
+  buildLetterText(letter).forEach(line => {
+    if (line === "") { wrapped.push(""); return; }
+    wrapParagraph(ctx, line, LETTER_AREA.width).forEach(l => wrapped.push(l));
+  });
+  return wrapped;
+}
+
+function checkOverflow(ctx, letter) {
+  const wrapped = buildWrappedLines(ctx, letter, letter.fontSize);
+  const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
+  const totalHeight = wrapped.length * lineHeight;
+  return { fits: totalHeight <= LETTER_AREA.height, usedHeight: totalHeight, lines: wrapped, lineHeight };
+}
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return { r: parseInt(h.substring(0,2),16), g: parseInt(h.substring(2,4),16), b: parseInt(h.substring(4,6),16) };
+}
+function isLowContrast(inkHex, backgroundTone) {
+  const rgb = hexToRgb(inkHex);
+  const luminance = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+  return backgroundTone === "light" ? luminance > 0.55 : luminance < 0.45;
+}
+
+function renderLetterDOM(container, letter, scale = 1) {
+  container.style.position = "relative";
+  container.style.width = `${CANVAS.width * scale}px`;
+  container.style.height = `${CANVAS.height * scale}px`;
+  container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+  container.style.backgroundSize = "cover";
+  container.innerHTML = "";
+  const textBox = document.createElement("div");
+  Object.assign(textBox.style, {
+    position: "absolute",
+    left: `${LETTER_AREA.left * scale}px`,
+    top: `${LETTER_AREA.top * scale}px`,
+    width: `${LETTER_AREA.width * scale}px`,
+    height: `${LETTER_AREA.height * scale}px`,
+    fontFamily: getFontFamily(letter.fontId),
+    fontSize: `${letter.fontSize * scale}px`,
+    lineHeight: LINE_HEIGHT_FACTOR,
+    color: letter.inkColor,
+    textAlign: letter.alignment,
+    whiteSpace: "pre-wrap",
+    overflow: "hidden"
+  });
+  textBox.textContent = buildLetterText(letter).join("\n");
+  container.appendChild(textBox);
+}
+
+/* ===================== Page logic ===================== */
+document.getElementById('dearu-footer-year').textContent = new Date().getFullYear();
+
+const letterSlot = document.getElementById('letter-slot');
+const metaRow = document.getElementById('meta-row');
+const metaTo = document.getElementById('meta-to');
+const metaTime = document.getElementById('meta-time');
+const actionsRow = document.getElementById('actions');
+const statusLine = document.getElementById('status-line');
+const reportBtn = document.getElementById('report-btn');
+const reportOverlay = document.getElementById('report-overlay');
+const reportForm = document.getElementById('report-form');
+const reportCancel = document.getElementById('report-cancel');
+const reportSubmit = document.getElementById('report-submit');
+
+let currentLetter = null;
+let currentLetterId = null;
+let frameEl = null;
+let renderTarget = null;
+
+function showState(message) {
+  letterSlot.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'state-box';
+  box.textContent = message;
+  letterSlot.appendChild(box);
+}
+
+function relativeTime(date) {
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const sec = Math.floor(diffMs / 1000);
+  if (sec < 60) return 'Released just now';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `Released ${min} minute${min === 1 ? '' : 's'} ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `Released ${hr} hour${hr === 1 ? '' : 's'} ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 30) return `Released ${day} day${day === 1 ? '' : 's'} ago`;
+  const mo = Math.floor(day / 30);
+  if (mo < 12) return `Released ${mo} month${mo === 1 ? '' : 's'} ago`;
+  const yr = Math.floor(mo / 12);
+  return `Released ${yr} year${yr === 1 ? '' : 's'} ago`;
+}
+
+function buildFrame() {
+  letterSlot.innerHTML = '';
+  frameEl = document.createElement('div');
+  frameEl.className = 'letter-frame';
+  renderTarget = document.createElement('div');
+  renderTarget.className = 'render-target';
+  frameEl.appendChild(renderTarget);
+  letterSlot.appendChild(frameEl);
+}
+
+function repaintLetter() {
+  if (!frameEl || !renderTarget || !currentLetter) return;
+  const scale = frameEl.clientWidth / CANVAS.width;
+  renderLetterDOM(renderTarget, currentLetter, scale);
+}
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    showState("This letter isn't available.");
+    return;
+  }
+
+  currentLetterId = id;
+
+  try {
+    const snap = await getDoc(doc(db, 'letters', id));
+    if (!snap.exists() || snap.data().status !== 'public') {
+      showState("This letter isn't available.");
+      return;
+    }
+    currentLetter = snap.data();
+  } catch (err) {
+    showState("This letter isn't available.");
+    return;
+  }
+
+  currentLetter.themeImageUrl = null;
+  if (currentLetter.themeId) {
+    try {
+      const themeSnap = await getDoc(doc(db, 'themes', currentLetter.themeId));
+      if (themeSnap.exists()) {
+        currentLetter.themeImageUrl = themeSnap.data().imageUrl || null;
+      }
+    } catch (err) {
+      currentLetter.themeImageUrl = null;
+    }
+  }
+
+  metaTo.textContent = `${currentLetter.salutation} ${currentLetter.to}`;
+  const created = currentLetter.createdAt && currentLetter.createdAt.toDate
+    ? currentLetter.createdAt.toDate()
+    : new Date();
+  metaTime.textContent = relativeTime(created);
+  metaRow.style.display = 'flex';
+
+  buildFrame();
+  repaintLetter();
+  window.addEventListener('resize', repaintLetter);
+
+  actionsRow.style.display = 'flex';
+}
+
+/* ---- report flow ---- */
+reportBtn.addEventListener('click', () => {
+  reportOverlay.classList.add('open');
+});
+reportCancel.addEventListener('click', () => {
+  reportOverlay.classList.remove('open');
+  reportForm.reset();
+});
+reportOverlay.addEventListener('click', (e) => {
+  if (e.target === reportOverlay) {
+    reportOverlay.classList.remove('open');
+    reportForm.reset();
+  }
+});
+
+reportForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentLetterId) return;
+  const reason = document.getElementById('reason').value;
+  const details = document.getElementById('details').value.trim();
+
+  reportSubmit.disabled = true;
+  reportSubmit.textContent = 'Sending…';
+
+  try {
+    await addDoc(collection(db, 'reports'), {
+      letterId: currentLetterId,
+      reason,
+      details: details.length > 0 ? details : null,
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+    reportOverlay.classList.remove('open');
+    reportForm.reset();
+    statusLine.textContent = 'Thank you, your report has been sent.';
+  } catch (err) {
+    statusLine.textContent = "We couldn't send your report. Please try again.";
+  } finally {
+    reportSubmit.disabled = false;
+    reportSubmit.textContent = 'Send report';
+  }
+});
+
+init();
+</script>
+</body>
+</html>

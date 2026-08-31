@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — DearU Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F1E9;
+    --paper-raised: #FBF8F3;
+    --ink: #211D19;
+    --ink-soft: rgba(33, 29, 25, 0.62);
+    --ink-faint: rgba(33, 29, 25, 0.4);
+    --hairline: rgba(33, 29, 25, 0.12);
+    --hairline-strong: rgba(33, 29, 25, 0.22);
+    --navy: #1B2A4A;
+    --navy-soft: rgba(27, 42, 74, 0.08);
+    --brown: #4A2E1D;
+    --deep-red: #5C1A1A;
+    --deep-red-soft: rgba(92, 26, 26, 0.08);
+    --forest: #1F3D2B;
+    --forest-soft: rgba(31, 61, 43, 0.09);
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a { color: inherit; }
+
+  /* ---------- Header / admin shell nav ---------- */
+
+  header.admin-shell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--paper-raised);
+    flex-wrap: wrap;
+  }
+
+  .wordmark { display: inline-flex; align-items: center; line-height: 0; }
+
+  nav.admin-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  nav.admin-nav a, nav.admin-nav button {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  nav.admin-nav a:hover, nav.admin-nav button:hover {
+    background: var(--navy-soft);
+    color: var(--ink);
+  }
+
+  nav.admin-nav a.current {
+    color: var(--navy);
+    background: var(--navy-soft);
+    font-weight: 600;
+  }
+
+  nav.admin-nav .logout-btn {
+    color: var(--deep-red);
+    margin-left: 6px;
+  }
+
+  nav.admin-nav .logout-btn:hover {
+    background: var(--deep-red-soft);
+  }
+
+  /* ---------- Main ---------- */
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 32px 64px;
+  }
+
+  .page-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .page-heading h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 32px;
+    margin: 0;
+  }
+
+  .page-heading .as-of {
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- Stat ledger ---------- */
+
+  .stat-ledger {
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--hairline-strong);
+    border-bottom: 1px solid var(--hairline-strong);
+    margin-bottom: 56px;
+  }
+
+  .stat-entry {
+    flex: 1 1 150px;
+    padding: 22px 24px;
+    border-right: 1px solid var(--hairline);
+  }
+
+  .stat-entry:last-child { border-right: none; }
+
+  .stat-entry .stat-label {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .stat-entry .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  .stat-entry.accent-red .stat-number { color: var(--deep-red); }
+  .stat-entry.accent-forest .stat-number { color: var(--forest); }
+
+  .stat-number.skeleton {
+    color: var(--ink-faint);
+  }
+
+  /* ---------- Dashboard body ---------- */
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  section.panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 20px;
+    margin: 0 0 18px;
+  }
+
+  /* Recent letters list */
+
+  .letter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .letter-row:first-child { border-top: 1px solid var(--hairline); }
+
+  .letter-row:hover .letter-to { color: var(--navy); }
+
+  .letter-main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .letter-to {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.15s ease;
+  }
+
+  .letter-from {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .letter-time {
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .empty-note, .error-note {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    padding: 18px 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .error-note { color: var(--deep-red); }
+
+  /* ---------- Guard / loading state ---------- */
+
+  #auth-gate {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    padding: 120px 0;
+  }
+
+  .hidden { display: none !important; }
+
+  /* ---------- Footer (public pages only — not used here, admin has none) ---------- */
+</style>
+</head>
+<body>
+
+<div id="auth-gate">Checking admin access…</div>
+
+<div id="app" class="hidden">
+  <header class="admin-shell">
+    <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+    <nav class="admin-nav">
+      <a href="admin-dashboard.html" class="current">Dashboard</a>
+      <a href="admin-themes.html">Themes</a>
+      <a href="admin-letters.html">Letters</a>
+      <a href="admin-reports.html">Reports</a>
+      <button type="button" id="logout-btn" class="logout-btn">Log out</button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-heading">
+      <h1>Dashboard</h1>
+      <span class="as-of" id="as-of-label"></span>
+    </div>
+
+    <div class="stat-ledger">
+      <div class="stat-entry">
+        <div class="stat-label">Total letters</div>
+        <div class="stat-number skeleton" id="stat-total-letters">—</div>
+      </div>
+      <div class="stat-entry">
+        <div class="stat-label">Letters today</div>
+        <div class="stat-number skeleton" id="stat-letters-today">—</div>
+      </div>
+      <div class="stat-entry">
+        <div class="stat-label">Letters this week</div>
+        <div class="stat-number skeleton" id="stat-letters-week">—</div>
+      </div>
+      <div class="stat-entry">
+        <div class="stat-label">Total reports</div>
+        <div class="stat-number skeleton" id="stat-total-reports">—</div>
+      </div>
+      <div class="stat-entry accent-red">
+        <div class="stat-label">Pending reports</div>
+        <div class="stat-number skeleton" id="stat-pending-reports">—</div>
+      </div>
+      <div class="stat-entry accent-forest">
+        <div class="stat-label">Active themes</div>
+        <div class="stat-number skeleton" id="stat-active-themes">—</div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <section class="panel" aria-labelledby="recent-heading">
+        <h2 id="recent-heading">Recent letters</h2>
+        <div id="recent-letters-list">
+          <div class="empty-note">Loading recent letters…</div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, query, where, orderBy, limit,
+    getDocs, getCountFromServer, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const authGate = document.getElementById('auth-gate');
+  const appRoot = document.getElementById('app');
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'admin.html';
+      return;
+    }
+    try {
+      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+      if (!adminDoc.exists()) {
+        window.location.href = 'admin.html';
+        return;
+      }
+    } catch (err) {
+      window.location.href = 'admin.html';
+      return;
+    }
+    authGate.classList.add('hidden');
+    appRoot.classList.remove('hidden');
+    document.getElementById('as-of-label').textContent =
+      `As of ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}`;
+    loadStats();
+    loadRecentLetters();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'admin.html';
+  });
+
+  // ---------- Stat tiles ----------
+  function startOfTodayTimestamp() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return Timestamp.fromDate(d);
+  }
+  function startOfWeekTimestamp() {
+    const d = new Date();
+    const day = d.getDay(); // 0 = Sunday
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return Timestamp.fromDate(d);
+  }
+
+  async function setCount(elId, q) {
+    const el = document.getElementById(elId);
+    try {
+      const snap = await getCountFromServer(q);
+      el.textContent = snap.data().count.toLocaleString();
+      el.classList.remove('skeleton');
+    } catch (err) {
+      el.textContent = '—';
+      el.title = 'Could not load — an index may still be building. Check the console link in the query error.';
+    }
+  }
+
+  async function loadStats() {
+    const lettersCol = collection(db, 'letters');
+    const reportsCol = collection(db, 'reports');
+    const themesCol = collection(db, 'themes');
+
+    setCount('stat-total-letters', query(lettersCol));
+    setCount('stat-letters-today', query(lettersCol, where('createdAt', '>=', startOfTodayTimestamp())));
+    setCount('stat-letters-week', query(lettersCol, where('createdAt', '>=', startOfWeekTimestamp())));
+    setCount('stat-total-reports', query(reportsCol));
+    setCount('stat-pending-reports', query(reportsCol, where('status', '==', 'pending')));
+    setCount('stat-active-themes', query(themesCol, where('active', '==', true)));
+  }
+
+  // ---------- Recent letters ----------
+  function formatRelativeTime(date) {
+    const diffMs = Date.now() - date.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  async function loadRecentLetters() {
+    const listEl = document.getElementById('recent-letters-list');
+    try {
+      const q = query(collection(db, 'letters'), orderBy('createdAt', 'desc'), limit(5));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        listEl.innerHTML = '<div class="empty-note">No letters have been written yet.</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      snap.forEach(docSnap => {
+        const letter = docSnap.data();
+        const row = document.createElement('a');
+        row.className = 'letter-row';
+        row.href = `admin-letters.html?id=${docSnap.id}`;
+
+        const main = document.createElement('div');
+        main.className = 'letter-main';
+        const to = document.createElement('div');
+        to.className = 'letter-to';
+        to.textContent = `${letter.salutation || 'Dear'} ${letter.to || 'Unknown'}`;
+        main.appendChild(to);
+        if (letter.from && letter.from.trim().length > 0) {
+          const from = document.createElement('div');
+          from.className = 'letter-from';
+          from.textContent = `— ${letter.from.trim()}`;
+          main.appendChild(from);
+        }
+
+        const time = document.createElement('div');
+        time.className = 'letter-time';
+        time.textContent = letter.createdAt ? formatRelativeTime(letter.createdAt.toDate()) : '';
+
+        row.appendChild(main);
+        row.appendChild(time);
+        listEl.appendChild(row);
+      });
+    } catch (err) {
+      listEl.innerHTML = '<div class="error-note">Couldn\'t load recent letters. Check the browser console — a Firestore index may still be building.</div>';
+    }
+  }
+</script>
+
+</body>
+</html>

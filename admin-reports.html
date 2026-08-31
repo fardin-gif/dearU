@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports — DearU Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F1E9;
+    --paper-raised: #FBF8F3;
+    --ink: #211D19;
+    --ink-soft: rgba(33, 29, 25, 0.62);
+    --ink-faint: rgba(33, 29, 25, 0.4);
+    --hairline: rgba(33, 29, 25, 0.12);
+    --hairline-strong: rgba(33, 29, 25, 0.22);
+    --navy: #1B2A4A;
+    --navy-soft: rgba(27, 42, 74, 0.08);
+    --brown: #4A2E1D;
+    --deep-red: #5C1A1A;
+    --deep-red-soft: rgba(92, 26, 26, 0.08);
+    --forest: #1F3D2B;
+    --forest-soft: rgba(31, 61, 43, 0.09);
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a { color: inherit; }
+  button { font: inherit; }
+
+  /* ---------- Header / admin shell nav (shared across admin-*.html) ---------- */
+
+  header.admin-shell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--paper-raised);
+    flex-wrap: wrap;
+  }
+
+  .wordmark { display: inline-flex; align-items: center; line-height: 0; }
+
+  nav.admin-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  nav.admin-nav a, nav.admin-nav button {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  nav.admin-nav a:hover, nav.admin-nav button:hover {
+    background: var(--navy-soft);
+    color: var(--ink);
+  }
+
+  nav.admin-nav a.current {
+    color: var(--navy);
+    background: var(--navy-soft);
+    font-weight: 600;
+  }
+
+  nav.admin-nav .logout-btn {
+    color: var(--deep-red);
+    margin-left: 6px;
+  }
+
+  nav.admin-nav .logout-btn:hover {
+    background: var(--deep-red-soft);
+  }
+
+  /* ---------- Main ---------- */
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  .page-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .page-heading h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 32px;
+    margin: 0;
+  }
+
+  /* Status filter */
+
+  .status-filter {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    width: fit-content;
+    margin-bottom: 36px;
+  }
+
+  .status-filter button {
+    padding: 8px 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: var(--paper-raised);
+    cursor: pointer;
+    border: none;
+  }
+
+  .status-filter button + button { border-left: 1px solid var(--hairline-strong); }
+
+  .status-filter button.active {
+    background: var(--navy);
+    color: var(--paper);
+  }
+
+  .status-filter button .count-badge {
+    margin-left: 6px;
+    font-size: 11.5px;
+    opacity: 0.75;
+  }
+
+  /* Report list */
+
+  #reports-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .empty-note, .error-note, .loading-note {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    padding: 20px 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .error-note { color: var(--deep-red); }
+
+  .report-card {
+    display: flex;
+    gap: 20px;
+    padding: 24px 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .report-preview {
+    flex-shrink: 0;
+    width: 106px;
+    height: 150px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--paper-raised);
+    position: relative;
+    text-decoration: none;
+    display: block;
+  }
+
+  .report-preview .fallback-preview {
+    padding: 8px;
+    font-size: 9px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    font-family: 'Lora', serif;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .report-preview .deleted-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    padding: 8px;
+  }
+
+  .report-body { flex: 1; min-width: 0; }
+
+  .report-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .report-reason {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+  }
+
+  .report-time {
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .report-details {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+
+  .report-letter-link {
+    font-size: 12.5px;
+    color: var(--navy);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    margin-bottom: 16px;
+    display: inline-block;
+  }
+
+  .report-letter-link:hover { border-bottom-color: currentColor; }
+
+  .report-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .report-actions button {
+    font-size: 12.5px;
+    padding: 7px 13px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--hairline-strong);
+    background: var(--paper-raised);
+    color: var(--ink);
+    transition: opacity 0.15s ease;
+  }
+
+  .report-actions button:hover { opacity: 0.75; }
+  .report-actions button:disabled { opacity: 0.4; cursor: default; }
+
+  .report-actions button.action-keep {
+    border-color: var(--forest);
+    color: var(--forest);
+  }
+
+  .report-actions button.action-hide {
+    border-color: var(--brown);
+    color: var(--brown);
+  }
+
+  .report-actions button.action-delete {
+    border-color: var(--deep-red);
+    color: var(--deep-red);
+  }
+
+  .report-actions .action-status {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  /* Guard / loading state */
+
+  #auth-gate {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    padding: 120px 0;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="auth-gate">Checking admin access…</div>
+
+<div id="app" class="hidden">
+  <header class="admin-shell">
+    <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+    <nav class="admin-nav">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <a href="admin-themes.html">Themes</a>
+      <a href="admin-letters.html">Letters</a>
+      <a href="admin-reports.html" class="current">Reports</a>
+      <button type="button" id="logout-btn" class="logout-btn">Log out</button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-heading">
+      <h1>Reports</h1>
+    </div>
+
+    <div class="status-filter">
+      <button type="button" id="filter-pending" class="active">Pending</button>
+      <button type="button" id="filter-reviewed">Reviewed</button>
+    </div>
+
+    <div id="reports-list">
+      <div class="loading-note">Loading reports…</div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, query, where,
+    orderBy, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ---------- Canonical constants (subset needed for letter preview) ----------
+  const CANVAS = { width: 1414, height: 2000 };
+  const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+  const LINE_HEIGHT_FACTOR = 1.5;
+
+  const FONTS = {
+    en: [
+      { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+      { id: "en-elegant-serif", name: "Elegant Serif", family: "'Cormorant Garamond', serif" },
+      { id: "en-editorial-serif", name: "Editorial Serif", family: "'Playfair Display', serif" },
+      { id: "en-clean-sans", name: "Clean Sans", family: "'Inter', sans-serif" },
+      { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+      { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" }
+    ],
+    bn: [
+      { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+      { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+      { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+      { id: "bn-rounded", name: "Baloo Da 2", family: "'Baloo Da 2', sans-serif" },
+      { id: "bn-sans-alt", name: "Noto Sans Bengali", family: "'Noto Sans Bengali', sans-serif" },
+      { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+    ]
+  };
+
+  // ---------- Canonical Letter Renderer (verbatim, subset used by this page) ----------
+  function getFontFamily(fontId) {
+    const all = [...FONTS.en, ...FONTS.bn];
+    const found = all.find(f => f.id === fontId);
+    return found ? found.family : FONTS.en[0].family;
+  }
+
+  function buildLetterText(letter) {
+    const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+    if (letter.from && letter.from.trim().length > 0) lines.push(`— ${letter.from.trim()}`);
+    return lines;
+  }
+
+  function renderLetterDOM(container, letter, scale = 1) {
+    container.style.position = "relative";
+    container.style.width = `${CANVAS.width * scale}px`;
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+    container.style.backgroundSize = "cover";
+    container.innerHTML = "";
+    const textBox = document.createElement("div");
+    Object.assign(textBox.style, {
+      position: "absolute",
+      left: `${LETTER_AREA.left * scale}px`,
+      top: `${LETTER_AREA.top * scale}px`,
+      width: `${LETTER_AREA.width * scale}px`,
+      height: `${LETTER_AREA.height * scale}px`,
+      fontFamily: getFontFamily(letter.fontId),
+      fontSize: `${letter.fontSize * scale}px`,
+      lineHeight: LINE_HEIGHT_FACTOR,
+      color: letter.inkColor,
+      textAlign: letter.alignment,
+      whiteSpace: "pre-wrap",
+      overflow: "hidden"
+    });
+    textBox.textContent = buildLetterText(letter).join("\n");
+    container.appendChild(textBox);
+  }
+
+  const PREVIEW_SCALE = 106 / CANVAS.width; // fits the 106px-wide preview box
+
+  const authGate = document.getElementById('auth-gate');
+  const appRoot = document.getElementById('app');
+  const reportsList = document.getElementById('reports-list');
+  const filterPendingBtn = document.getElementById('filter-pending');
+  const filterReviewedBtn = document.getElementById('filter-reviewed');
+
+  let currentFilter = 'pending';
+  const themeCache = new Map();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = 'admin.html';
+      return;
+    }
+    try {
+      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+      if (!adminDoc.exists()) {
+        window.location.href = 'admin.html';
+        return;
+      }
+    } catch (err) {
+      window.location.href = 'admin.html';
+      return;
+    }
+    authGate.classList.add('hidden');
+    appRoot.classList.remove('hidden');
+    loadReports();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = 'admin.html';
+  });
+
+  filterPendingBtn.addEventListener('click', () => setFilter('pending'));
+  filterReviewedBtn.addEventListener('click', () => setFilter('reviewed'));
+
+  function setFilter(filter) {
+    if (filter === currentFilter) return;
+    currentFilter = filter;
+    filterPendingBtn.classList.toggle('active', filter === 'pending');
+    filterReviewedBtn.classList.toggle('active', filter === 'reviewed');
+    loadReports();
+  }
+
+  function formatRelativeTime(date) {
+    const diffMs = Date.now() - date.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  async function getThemeImageUrl(themeId) {
+    if (!themeId) return null;
+    if (themeCache.has(themeId)) return themeCache.get(themeId);
+    try {
+      const themeSnap = await getDoc(doc(db, 'themes', themeId));
+      const url = themeSnap.exists() ? themeSnap.data().imageUrl : null;
+      themeCache.set(themeId, url);
+      return url;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function loadReports() {
+    reportsList.innerHTML = '<div class="loading-note">Loading reports…</div>';
+    try {
+      // Uses composite index #7: reports (status ASC + createdAt DESC)
+      const q = query(
+        collection(db, 'reports'),
+        where('status', '==', currentFilter),
+        orderBy('createdAt', 'desc')
+      );
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        reportsList.innerHTML = `<div class="empty-note">No ${currentFilter} reports.</div>`;
+        return;
+      }
+      reportsList.innerHTML = '';
+      for (const reportDoc of snap.docs) {
+        const card = await buildReportCard(reportDoc.id, reportDoc.data());
+        reportsList.appendChild(card);
+      }
+    } catch (err) {
+      reportsList.innerHTML = '<div class="error-note">Couldn\'t load reports. Check the browser console — a Firestore index may still be building.</div>';
+    }
+  }
+
+  async function buildReportCard(reportId, report) {
+    const card = document.createElement('div');
+    card.className = 'report-card';
+
+    // ---- Preview column ----
+    const previewLink = document.createElement('a');
+    previewLink.className = 'report-preview';
+    previewLink.href = `admin-letters.html?id=${report.letterId}`;
+
+    let letter = null;
+    try {
+      const letterSnap = await getDoc(doc(db, 'letters', report.letterId));
+      if (letterSnap.exists()) letter = { id: letterSnap.id, ...letterSnap.data() };
+    } catch (err) {
+      letter = null;
+    }
+
+    if (letter) {
+      const themeImageUrl = await getThemeImageUrl(letter.themeId);
+      if (themeImageUrl) {
+        const previewInner = document.createElement('div');
+        renderLetterDOM(previewInner, { ...letter, themeImageUrl }, PREVIEW_SCALE);
+        previewInner.style.pointerEvents = 'none';
+        previewLink.appendChild(previewInner);
+      } else {
+        const fallback = document.createElement('div');
+        fallback.className = 'fallback-preview';
+        fallback.textContent = `${letter.salutation || 'Dear'} ${letter.to || ''} — ${(letter.body || '').slice(0, 90)}`;
+        previewLink.appendChild(fallback);
+      }
+    } else {
+      const deletedNote = document.createElement('div');
+      deletedNote.className = 'deleted-note';
+      deletedNote.textContent = 'Letter no longer exists';
+      previewLink.appendChild(deletedNote);
+    }
+
+    // ---- Body column ----
+    const body = document.createElement('div');
+    body.className = 'report-body';
+
+    const meta = document.createElement('div');
+    meta.className = 'report-meta';
+    const reasonEl = document.createElement('div');
+    reasonEl.className = 'report-reason';
+    reasonEl.textContent = report.reason || 'No reason given';
+    const timeEl = document.createElement('div');
+    timeEl.className = 'report-time';
+    timeEl.textContent = report.createdAt ? formatRelativeTime(report.createdAt.toDate()) : '';
+    meta.appendChild(reasonEl);
+    meta.appendChild(timeEl);
+    body.appendChild(meta);
+
+    if (report.details && report.details.trim().length > 0) {
+      const detailsEl = document.createElement('div');
+      detailsEl.className = 'report-details';
+      detailsEl.textContent = report.details;
+      body.appendChild(detailsEl);
+    }
+
+    const letterLink = document.createElement('a');
+    letterLink.className = 'report-letter-link';
+    letterLink.href = `admin-letters.html?id=${report.letterId}`;
+    letterLink.textContent = 'Open full letter →';
+    body.appendChild(letterLink);
+
+    const actions = document.createElement('div');
+    actions.className = 'report-actions';
+
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'action-status';
+
+    function disableActions() {
+      Array.from(actions.querySelectorAll('button')).forEach(b => b.disabled = true);
+    }
+
+    if (currentFilter === 'pending') {
+      // "Keep letter" is an explicit judgment call (letter is fine, no violation);
+      // "Mark reviewed" is a no-judgment dismissal (e.g. report itself is spam/invalid).
+      // Both perform the same underlying write — no change to the letter, report -> reviewed.
+      const keepBtn = document.createElement('button');
+      keepBtn.className = 'action-keep';
+      keepBtn.textContent = 'Keep letter';
+      keepBtn.disabled = !letter;
+      keepBtn.addEventListener('click', () => runAction(async () => {
+        await updateDoc(doc(db, 'reports', reportId), { status: 'reviewed' });
+      }, card, statusSpan, disableActions));
+
+      const hideBtn = document.createElement('button');
+      hideBtn.className = 'action-hide';
+      hideBtn.textContent = 'Hide letter';
+      hideBtn.disabled = !letter;
+      hideBtn.addEventListener('click', () => runAction(async () => {
+        await updateDoc(doc(db, 'letters', report.letterId), { status: 'hidden' });
+        await updateDoc(doc(db, 'reports', reportId), { status: 'reviewed' });
+      }, card, statusSpan, disableActions));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'action-delete';
+      deleteBtn.textContent = 'Delete letter';
+      deleteBtn.disabled = !letter;
+      deleteBtn.addEventListener('click', () => {
+        if (!window.confirm('Permanently delete this letter? This cannot be undone.')) return;
+        runAction(async () => {
+          await deleteDoc(doc(db, 'letters', report.letterId));
+          await updateDoc(doc(db, 'reports', reportId), { status: 'reviewed' });
+        }, card, statusSpan, disableActions);
+      });
+
+      const markReviewedBtn = document.createElement('button');
+      markReviewedBtn.textContent = 'Mark reviewed';
+      markReviewedBtn.addEventListener('click', () => runAction(async () => {
+        await updateDoc(doc(db, 'reports', reportId), { status: 'reviewed' });
+      }, card, statusSpan, disableActions));
+
+      actions.appendChild(keepBtn);
+      actions.appendChild(hideBtn);
+      actions.appendChild(deleteBtn);
+      actions.appendChild(markReviewedBtn);
+    } else {
+      const doneNote = document.createElement('span');
+      doneNote.className = 'action-status';
+      doneNote.textContent = 'Reviewed';
+      actions.appendChild(doneNote);
+    }
+
+    actions.appendChild(statusSpan);
+    body.appendChild(actions);
+
+    card.appendChild(previewLink);
+    card.appendChild(body);
+    return card;
+  }
+
+  async function runAction(fn, card, statusSpan, disableActions) {
+    disableActions();
+    statusSpan.textContent = 'Saving…';
+    try {
+      await fn();
+      statusSpan.textContent = 'Done.';
+      card.style.opacity = '0.4';
+      setTimeout(() => card.remove(), 400);
+    } catch (err) {
+      statusSpan.textContent = 'Failed — please try again.';
+      Array.from(card.querySelectorAll('.report-actions button')).forEach(b => b.disabled = false);
+    }
+  }
+</script>
+
+</body>
+</html>

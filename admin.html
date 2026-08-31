@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login · DearU</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap">
+<style>
+  :root {
+    --bg: #F7F4EF;
+    --ink: #2E2A24;
+    --muted: rgba(46, 42, 36, 0.55);
+    --line: rgba(46, 42, 36, 0.12);
+    --card-bg: #FFFFFF;
+    --error: #7A2E2E;
+    --error-bg: #FBEEEE;
+    --focus: #2E2A24;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  header.top-bar {
+    width: 100%;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+  }
+
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 40px 36px;
+  }
+
+  .login-card h1 {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 22px;
+    margin: 0 0 6px;
+    text-align: center;
+  }
+
+  .login-card .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin: 0 0 28px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    background: #FCFBF9;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    border-color: var(--focus);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+  }
+
+  button[type="submit"] {
+    margin-top: 6px;
+    padding: 11px 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: #fff;
+    background: var(--ink);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  button[type="submit"]:hover {
+    opacity: 0.88;
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .error-box {
+    display: none;
+    font-size: 13px;
+    color: var(--error);
+    background: var(--error-bg);
+    border-radius: 6px;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+
+  .error-box.visible {
+    display: block;
+  }
+
+  .checking-note {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+</header>
+
+<main>
+  <div class="login-card" id="login-card">
+
+    <div id="checking-state" class="checking-note">Checking your session…</div>
+
+    <div id="form-state" style="display:none;">
+      <h1>Admin Login</h1>
+      <p class="subtitle">Sign in to manage DearU</p>
+
+      <div class="error-box" id="error-box"></div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" id="submit-btn">Log in</button>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const checkingState = document.getElementById("checking-state");
+  const formState = document.getElementById("form-state");
+  const errorBox = document.getElementById("error-box");
+  const loginForm = document.getElementById("login-form");
+  const submitBtn = document.getElementById("submit-btn");
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.classList.add("visible");
+  }
+
+  function clearError() {
+    errorBox.textContent = "";
+    errorBox.classList.remove("visible");
+  }
+
+  async function isAdminUser(uid) {
+    const adminDoc = await getDoc(doc(db, "admins", uid));
+    return adminDoc.exists();
+  }
+
+  function friendlyAuthError(code) {
+    switch (code) {
+      case "auth/invalid-email":
+        return "That email address doesn't look right.";
+      case "auth/user-not-found":
+      case "auth/invalid-credential":
+        return "No account found with that email and password.";
+      case "auth/wrong-password":
+        return "Incorrect password. Please try again.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait a moment and try again.";
+      case "auth/user-disabled":
+        return "This account has been disabled.";
+      default:
+        return "Couldn't log in. Please check your details and try again.";
+    }
+  }
+
+  // On load: if already authenticated and already an admin, skip straight to the dashboard.
+  // Otherwise reveal the login form.
+  let resolvedInitialState = false;
+  onAuthStateChanged(auth, async (user) => {
+    if (resolvedInitialState) return;
+    resolvedInitialState = true;
+
+    if (user) {
+      try {
+        const admin = await isAdminUser(user.uid);
+        if (admin) {
+          window.location.replace("admin-dashboard.html");
+          return;
+        }
+      } catch (err) {
+        // Fall through to showing the login form on any lookup failure.
+      }
+    }
+
+    checkingState.style.display = "none";
+    formState.style.display = "block";
+  });
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Logging in…";
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const admin = await isAdminUser(cred.user.uid);
+
+      if (admin) {
+        window.location.replace("admin-dashboard.html");
+      } else {
+        await signOut(auth);
+        showError("This account doesn't have admin access.");
+      }
+    } catch (err) {
+      showError(friendlyAuthError(err.code));
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Log in";
+    }
+  });
+</script>
+
+</body>
+</html>
