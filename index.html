@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DearU — write it for them, release it to the universe</title>
+<title>DearU</title>
 <link rel="shortcut icon" href="icon.png" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Atma&display=swap" rel="stylesheet">
@@ -57,10 +57,10 @@
   }
   .header-write-link {
     font-size: 14px;
-    text-decoration: none;
+    text-decoration:none;
     color: var(--muted);
     border-bottom: 1px solid transparent;
-    padding-bottom: 2px;
+    padding-top: 15px;
     transition: color 0.15s ease, border-color 0.15s ease;
   }
   .header-write-link:hover {
@@ -260,6 +260,12 @@
     border-color: var(--ink-navy);
   }
 
+  /* whole card is now the clickable anchor to the letter */
+  a.letter-card {
+    text-decoration: none;
+    color: inherit;
+  }
+
   .shelf-sentinel {
     flex: 0 0 1px;
   }
@@ -270,6 +276,121 @@
     color: var(--muted);
   }
   .shelf-status[hidden] { display: none; }
+
+  /* ---------- first letter hero (the oldest letter, given special treatment) ---------- */
+  .first-letter-hero {
+    margin: 8px clamp(20px, 5vw, 64px) 56px;
+    padding: clamp(28px, 4vw, 48px);
+    border-radius: 18px;
+    background:
+      radial-gradient(120% 140% at 12% 0%, rgba(120,15,95,0.07), transparent 55%),
+      #FBF9F3;
+    border: 1px solid rgba(120,15,95,0.14);
+    box-shadow: 0 24px 60px -34px rgba(43,40,35,0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .first-letter-hero[hidden] { display: none; }
+  .first-letter-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+  }
+  .first-letter-inner {
+    display: flex;
+    align-items: center;
+    gap: clamp(28px, 5vw, 56px);
+  }
+  @media (max-width: 760px) {
+    .first-letter-inner { flex-direction: column; align-items: stretch; }
+  }
+
+  .first-letter-frame {
+    position: relative;
+    flex: 0 0 auto;
+    width: clamp(200px, 26vw, 300px);
+    margin: 0 auto;
+  }
+  .first-letter-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: #780f5f;
+    color: #fff;
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    line-height: 1;
+    padding: 7px 18px 6px;
+    border-radius: 999px;
+    box-shadow: 0 8px 18px -8px rgba(120,15,95,0.6);
+    z-index: 2;
+  }
+  .first-letter-render-wrap {
+    width: 100%;
+    aspect-ratio: 1414 / 2000;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #E9E4D8;
+    box-shadow:
+      0 0 0 6px #FBF9F3,
+      0 0 0 7px rgba(120,15,95,0.25),
+      0 26px 46px -22px rgba(43,40,35,0.55);
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .first-letter-render-wrap img,
+  .first-letter-render-wrap * { pointer-events: none; }
+
+  .first-letter-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .first-letter-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: #780f5f;
+    margin: 0 0 8px;
+    letter-spacing: 0.02em;
+  }
+  .first-letter-title {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: clamp(22px, 3vw, 30px);
+    line-height: 1.28;
+    margin: 0 0 10px;
+    max-width: 20ch;
+  }
+  .first-letter-sub {
+    font-size: 13px;
+    color: var(--faint);
+    margin: 0 0 14px;
+  }
+  .first-letter-desc {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 46ch;
+    margin: 0 0 22px;
+  }
+  .first-letter-open {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 14px;
+    color: #780f5f;
+    border-bottom: 1px solid rgba(120,15,95,0.4);
+    padding-bottom: 2px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .first-letter-open:hover {
+    color: #c33dbc;
+    border-color: currentColor;
+  }
 
   /* ---------- footer (verbatim per master prompt) ---------- */
   .dearu-footer {
@@ -307,21 +428,37 @@
 <body>
 
 <header class="site-header">
-  <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
-  <a href="write.html" class="header-write-link">Write a letter</a>
+  <a href="index.html" class="wordmark"><img style="width: 150px; height: auto;" src="header-logo.png" alt="DearU"></a>
+  <a href="search.html" class="header-write-link">Browse letters</a>
 </header>
 
 <main>
   <section class="hero">
-    <h1>Write it for them.<br>Release it to the universe.</h1>
-    <p class="hero-sub">No inbox. No notification. Once it's out, it stays out — anyone can find it by searching the name it was written for.</p>
-    <a href="write.html" class="cta-write">Write a letter</a>
+    <h1>Some things are easier to write than to say 😶</h1>
+    <p class="hero-sub">Write it for someone. Put it out there. If they ever search their name, they might find it...</p>
+    <a href="write.html" class="cta-write">Write a letter ✒️</a>
 
     <form class="search-form" id="searchForm" role="search">
       <label for="searchInput" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Search letters by name</label>
-      <input type="text" id="searchInput" name="q" placeholder="Who is this letter for?" autocomplete="off" />
+      <input type="text" id="searchInput" name="q" placeholder="Search by the recipient's name" autocomplete="off" />
       <button type="submit">Search</button>
     </form>
+  </section>
+
+  <section class="first-letter-hero" id="firstLetterHero" hidden aria-label="The first letter ever released on DearU">
+    <div class="first-letter-inner">
+      <div class="first-letter-frame">
+        <span class="first-letter-badge">The first letter</span>
+        <div class="first-letter-render-wrap" id="firstLetterRenderWrap"></div>
+      </div>
+      <div class="first-letter-copy">
+        <p class="first-letter-eyebrow">Where DearU began</p>
+        <h2 class="first-letter-title">The very first letter ever released.</h2>
+        <p class="first-letter-sub" id="firstLetterMeta"></p>
+        <p class="first-letter-desc">Before every letter that followed, there was this one — written, released, and set free into the universe. It's kept here exactly as it was.</p>
+        <a class="first-letter-open" id="firstLetterLink" href="letter.html">Read this letter</a>
+      </div>
+    </div>
   </section>
 
   <section class="shelf-section" aria-label="Recently released letters">
@@ -343,9 +480,9 @@
   <p class="dearu-footer-line">
     <span class="dearu-footer-copyright">© <span id="dearu-footer-year"></span> DearU</span>
     <span class="dearu-footer-dot">·</span>
-    <span class="dearu-footer-credit">Designed by <a href="#" class="dearu-footer-link">A.I. Mahi</a></span>
+    <span class="dearu-footer-credit">Developed by <a href="https://www.facebook.com/fardin.0112" class="dearu-footer-link">Fardin Hossain</a></span>
     <span class="dearu-footer-dot">·</span>
-    <span class="dearu-footer-credit">Developed by <a href="#" class="dearu-footer-link">Fardin Hossain</a></span>
+    <span class="dearu-footer-credit">Designed by <a href="https://www.facebook.com/a.is.mahi" class="dearu-footer-link">A.I. Mahi</a></span>
   </p>
 </footer>
 
@@ -354,6 +491,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getFirestore, collection, query, where, orderBy, limit, startAfter, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// (orderBy/limit are reused below, ascending this time, to find the oldest public letter)
 
 // ---------- Firebase config (placeholder — user fills in real values) ----------
 const firebaseConfig = {
@@ -587,6 +725,10 @@ const shelfPrevBtn = document.getElementById("shelfPrev");
 const shelfNextBtn = document.getElementById("shelfNext");
 const searchForm = document.getElementById("searchForm");
 const searchInput = document.getElementById("searchInput");
+const firstLetterHeroEl = document.getElementById("firstLetterHero");
+const firstLetterRenderWrapEl = document.getElementById("firstLetterRenderWrap");
+const firstLetterMetaEl = document.getElementById("firstLetterMeta");
+const firstLetterLinkEl = document.getElementById("firstLetterLink");
 
 document.getElementById('dearu-footer-year').textContent = new Date().getFullYear();
 
@@ -648,8 +790,9 @@ function buildCard(letterDoc) {
     themeImageUrl: (themesMap[data.themeId] && themesMap[data.themeId].imageUrl) || FALLBACK_THEME_IMAGE
   };
 
-  const card = document.createElement("div");
+  const card = document.createElement("a");
   card.className = "letter-card";
+  card.href = `letter.html?id=${encodeURIComponent(letter.id)}`;
   card.dataset.id = letter.id;
 
   const renderWrap = document.createElement("div");
@@ -661,7 +804,6 @@ function buildCard(letterDoc) {
   meta.innerHTML = `
     <p class="letter-to">To: ${escapeHtml(letter.to)}</p>
     <p class="letter-time">released ${timeAgo(letter.createdAt)}</p>
-    <a class="letter-open" href="letter.html?id=${encodeURIComponent(letter.id)}">Open</a>
   `;
 
   card.appendChild(renderWrap);
@@ -684,6 +826,49 @@ async function loadThemes() {
     snap.forEach(d => { themesMap[d.id] = d.data(); });
   } catch (err) {
     console.error("Failed to load themes", err);
+  }
+}
+
+async function loadFirstLetter() {
+  try {
+    const firstQuery = query(
+      collection(db, "letters"),
+      where("status", "==", "public"),
+      orderBy("createdAt", "asc"),
+      limit(1)
+    );
+    const snap = await getDocs(firstQuery);
+    if (snap.empty) return;
+
+    const data = snap.docs[0].data();
+    const letter = {
+      id: snap.docs[0].id,
+      to: data.to,
+      from: data.from,
+      body: data.body,
+      salutation: data.salutation,
+      fontId: data.fontId,
+      fontSize: data.fontSize,
+      inkColor: data.inkColor,
+      alignment: data.alignment,
+      createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+      themeImageUrl: (themesMap[data.themeId] && themesMap[data.themeId].imageUrl) || FALLBACK_THEME_IMAGE
+    };
+
+    firstLetterLinkEl.href = `letter.html?id=${encodeURIComponent(letter.id)}`;
+    firstLetterMetaEl.textContent = `To ${letter.to} · released ${timeAgo(letter.createdAt)}`;
+    firstLetterHeroEl.hidden = false;
+
+    const scale = firstLetterRenderWrapEl.clientWidth / CANVAS.width;
+    renderLetterDOM(firstLetterRenderWrapEl, letter, scale || 1);
+  } catch (err) {
+    console.error("Failed to load first letter", err);
+    if (err && err.code === "failed-precondition") {
+      console.error(
+        "DearU: the 'first letter' hero needs a Firestore composite index on letters(status ASC, createdAt ASC). " +
+        "Firestore's error above should contain a direct link to create it — open it and click 'Create'."
+      );
+    }
   }
 }
 
@@ -749,19 +934,28 @@ let isDragging = false;
 let dragStartX = 0;
 let dragStartScroll = 0;
 let dragMoved = false;
+let activePointerId = null;
 
 shelfEl.addEventListener("pointerdown", (e) => {
   isDragging = true;
   dragMoved = false;
+  activePointerId = e.pointerId;
   dragStartX = e.clientX;
   dragStartScroll = shelfEl.scrollLeft;
   shelfEl.classList.add("dragging");
-  shelfEl.setPointerCapture(e.pointerId);
+  // NOTE: pointer capture is intentionally NOT grabbed here. Capturing on
+  // every pointerdown (including a plain tap/click) causes the browser to
+  // retarget the resulting click to the shelf itself instead of the card
+  // link underneath, so the "Open" navigation silently never fires. We only
+  // capture once real drag movement is confirmed, in pointermove below.
 });
 shelfEl.addEventListener("pointermove", (e) => {
   if (!isDragging) return;
   const delta = e.clientX - dragStartX;
-  if (Math.abs(delta) > 4) dragMoved = true;
+  if (!dragMoved && Math.abs(delta) > 4) {
+    dragMoved = true;
+    shelfEl.setPointerCapture(activePointerId);
+  }
   shelfEl.scrollLeft = dragStartScroll - delta;
 });
 function endDrag(e) {
@@ -796,6 +990,7 @@ searchForm.addEventListener("submit", (e) => {
 // ---------- boot ----------
 (async function init() {
   await loadThemes();
+  await loadFirstLetter();
   await loadNextPage();
 })();
 </script>
