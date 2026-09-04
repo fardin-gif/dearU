@@ -94,6 +94,12 @@
     font-weight: 600;
   }
 
+  nav.admin-nav .logout-btn {
+    color: var(--deep-red);
+    margin-left: 6px;
+  }
+  nav.admin-nav .logout-btn:hover { background: var(--deep-red-soft); }
+
   /* ---------- Main ---------- */
 
   main {
@@ -104,7 +110,14 @@
     padding: 40px 32px 80px;
   }
 
-  #page-content { display: block; }
+  #guard-state {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 13.5px;
+    padding: 120px 0;
+  }
+
+  #page-content { display: none; }
 
   .page-heading {
     margin-bottom: 24px;
@@ -477,7 +490,9 @@
 </head>
 <body>
 
-<div id="app-root">
+<div id="guard-state">Checking admin access…</div>
+
+<div id="app-root" style="display:none;">
   <header class="admin-shell">
     <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
     <nav class="admin-nav">
@@ -486,6 +501,7 @@
       <a href="admin-letters.html">Letters</a>
       <a href="admin-reports.html">Reports</a>
       <a href="admin-data.html" class="current">Data</a>
+      <button type="button" id="logout-btn" class="logout-btn">Log out</button>
     </nav>
   </header>
 
@@ -641,6 +657,9 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import {
+  getAuth, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import {
   getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, query, where,
   orderBy, limit, startAfter, getDocs
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
@@ -655,6 +674,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
 /* ===================== Canonical constants ===================== */
@@ -745,6 +765,9 @@ const FALLBACK_THEME_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(
 );
 
 /* ===================== DOM refs ===================== */
+const guardState = document.getElementById("guard-state");
+const appRoot = document.getElementById("app-root");
+const logoutBtn = document.getElementById("logout-btn");
 const toast = document.getElementById("toast");
 
 const listView = document.getElementById("list-view");
@@ -1204,15 +1227,38 @@ window.addEventListener("resize", () => {
   if (detailView.style.display === "block") repaintPreview();
 });
 
-/* ===================== Initial load ===================== */
-const initParams = new URLSearchParams(window.location.search);
-const initialId = initParams.get("id");
-if (initialId) {
-  showDetailView(initialId);
-} else {
-  showListView();
-  loadList(true);
-}
+/* ===================== Auth guard ===================== */
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.replace("admin.html");
+});
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.replace("admin.html"); return; }
+  try {
+    const adminDoc = await getDoc(doc(db, "admins", user.uid));
+    if (!adminDoc.exists()) {
+      await signOut(auth);
+      window.location.replace("admin.html");
+      return;
+    }
+  } catch (err) {
+    window.location.replace("admin.html");
+    return;
+  }
+
+  guardState.style.display = "none";
+  appRoot.style.display = "block";
+
+  const params = new URLSearchParams(window.location.search);
+  const initialId = params.get("id");
+  if (initialId) {
+    showDetailView(initialId);
+  } else {
+    showListView();
+    loadList(true);
+  }
+});
 </script>
 
 </body>
