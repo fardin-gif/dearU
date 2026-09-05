@@ -105,6 +105,19 @@
   }
   .theme-thumb.selected { border-color: var(--ink); }
   .theme-empty { font-size: 13px; color: var(--muted); }
+  .theme-unlimited-badge {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.85);
+    color: #2b2924;
+  }
 
   /* Form fields */
   label.field-label {
@@ -146,6 +159,7 @@
 
   .char-counter { font-size: 12px; color: var(--muted-light); text-align: right; }
   .char-counter.over { color: var(--danger); }
+  .char-counter.unlimited { color: var(--muted-light); font-style: italic; }
 
   /* Style step */
   .font-list { display: flex; flex-direction: column; gap: 16px; }
@@ -268,6 +282,12 @@
     border-radius: 4px;
     box-shadow: 0 6px 24px rgba(0,0,0,0.08);
     overflow: hidden;
+    transition: max-height 0.2s ease;
+  }
+  .preview-frame.flow-mode {
+    aspect-ratio: auto;
+    max-height: 70vh;
+    overflow-y: auto;
   }
   .preview-inner { width: 100%; height: 100%; }
   .preview-hint { font-size: 12px; color: var(--muted-light); text-align: center; }
@@ -322,7 +342,7 @@
     <!-- Step 1: Theme -->
     <div class="step-panel active" data-step="1">
       <h2 class="step-title">Choose a theme</h2>
-      <p class="step-hint">This sets the background of your letter.</p>
+      <p class="step-hint">This sets the background of your letter. Themes marked "Unlimited" let you write as long as you want.</p>
       <div class="theme-grid" id="themeGrid">
         <div class="theme-empty">Loading themes…</div>
       </div>
@@ -356,7 +376,7 @@
 
       <div class="field">
         <label class="field-label" for="bodyInput">Your letter</label>
-        <textarea id="bodyInput" maxlength="1500" placeholder="Write what you want to say…"></textarea>
+        <textarea id="bodyInput" placeholder="Write what you want to say…"></textarea>
         <div class="char-counter" id="charCounter">0 / 1500</div>
       </div>
 
@@ -428,10 +448,10 @@
   </section>
 
   <section class="preview-col">
-    <div class="preview-frame">
+    <div class="preview-frame" id="previewFrame">
       <div class="preview-inner" id="previewEl"></div>
     </div>
-    <p class="preview-hint">Live preview — this is exactly how your letter will look.</p>
+    <p class="preview-hint" id="previewHint">Live preview — this is exactly how your letter will look.</p>
   </section>
 </main>
 
@@ -469,7 +489,7 @@ const CANVAS = { width: 1414, height: 2000 };
 const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
 const FONT_SIZE_MIN = 24;
 const FONT_SIZE_MAX = 48;
-const CHAR_LIMIT = 1500;
+const DEFAULT_CHAR_LIMIT = 1500; // used for any theme that doesn't set its own style.charLimit
 const LINE_HEIGHT_FACTOR = 1.5;
 
 const FONTS = {
@@ -497,6 +517,19 @@ const INK_PRESETS = [
   { id: "forest-green", name: "Forest Green", hex: "#1F3D2B" },
   { id: "charcoal", name: "Charcoal", hex: "#2E2E2E" }
 ];
+
+// ---------- Starfield decor (used by themes with style.decor === "stars") ----------
+const STAR_FIELD_CSS =
+  "radial-gradient(1.5px 1.5px at 12% 20%, rgba(255,255,255,.9), transparent)," +
+  "radial-gradient(1px 1px at 24% 65%, rgba(255,255,255,.7), transparent)," +
+  "radial-gradient(1.5px 1.5px at 34% 12%, rgba(255,255,255,.8), transparent)," +
+  "radial-gradient(1px 1px at 47% 82%, rgba(255,255,255,.55), transparent)," +
+  "radial-gradient(1.5px 1.5px at 66% 24%, rgba(255,255,255,.85), transparent)," +
+  "radial-gradient(1px 1px at 78% 70%, rgba(255,255,255,.6), transparent)," +
+  "radial-gradient(1.5px 1.5px at 88% 15%, rgba(255,255,255,.75), transparent)," +
+  "radial-gradient(1px 1px at 92% 55%, rgba(255,255,255,.5), transparent)," +
+  "radial-gradient(1px 1px at 8% 85%, rgba(255,255,255,.5), transparent)," +
+  "radial-gradient(1.5px 1.5px at 58% 90%, rgba(255,255,255,.6), transparent)";
 
 // ---------- Canonical Letter Renderer (copied verbatim) ----------
 function extractDriveFileId(link) {
@@ -572,81 +605,87 @@ function isLowContrast(inkHex, backgroundTone) {
   return backgroundTone === "light" ? luminance > 0.55 : luminance < 0.45;
 }
 
+// ---- Updated: fixed-canvas OR flow layout ----
 function renderLetterDOM(container, letter, scale = 1) {
+  container.innerHTML = "";
+  const isFlow = letter.themeStyle && letter.themeStyle.layoutType === "flow";
+
+  if (!isFlow) {
+    container.style.position = "relative";
+    container.style.width = `${CANVAS.width * scale}px`;
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.minHeight = "";
+    container.style.background = "none";
+    container.style.overflow = "hidden";
+    container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+    container.style.backgroundSize = "cover";
+    const textBox = document.createElement("div");
+    Object.assign(textBox.style, {
+      position: "absolute",
+      left: `${LETTER_AREA.left * scale}px`,
+      top: `${LETTER_AREA.top * scale}px`,
+      width: `${LETTER_AREA.width * scale}px`,
+      height: `${LETTER_AREA.height * scale}px`,
+      fontFamily: getFontFamily(letter.fontId),
+      fontSize: `${letter.fontSize * scale}px`,
+      lineHeight: LINE_HEIGHT_FACTOR,
+      color: letter.inkColor,
+      textAlign: letter.alignment,
+      whiteSpace: "pre-wrap",
+      overflow: "hidden"
+    });
+    textBox.textContent = buildLetterText(letter).join("\n");
+    container.appendChild(textBox);
+    return;
+  }
+
+  const style = letter.themeStyle;
   container.style.position = "relative";
   container.style.width = `${CANVAS.width * scale}px`;
-  container.style.height = `${CANVAS.height * scale}px`;
-  container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+  container.style.minHeight = `${CANVAS.height * scale}px`;
+  container.style.height = "auto";
+  container.style.background = style.environmentBg || style.letterBg || "#f6f4ee";
   container.style.backgroundSize = "cover";
-  container.innerHTML = "";
-  const textBox = document.createElement("div");
-  Object.assign(textBox.style, {
-    position: "absolute",
-    left: `${LETTER_AREA.left * scale}px`,
-    top: `${LETTER_AREA.top * scale}px`,
-    width: `${LETTER_AREA.width * scale}px`,
-    height: `${LETTER_AREA.height * scale}px`,
+  container.style.overflow = "visible";
+  container.style.display = "flex";
+  container.style.justifyContent = "center";
+  container.style.padding = `${40 * scale}px 0`;
+  container.style.boxSizing = "border-box";
+
+  if (style.environmentBg && style.decor === "stars") {
+    const decor = document.createElement("div");
+    Object.assign(decor.style, {
+      position: "absolute", inset: "0", pointerEvents: "none",
+      backgroundImage: STAR_FIELD_CSS
+    });
+    container.appendChild(decor);
+  }
+
+  const page = document.createElement("div");
+  Object.assign(page.style, {
+    position: "relative",
+    width: `${(CANVAS.width - 120) * scale}px`,
+    minHeight: `${(CANVAS.height - 160) * scale}px`,
+    backgroundColor: style.letterBg || "#ffffff",
+    borderRadius: `${4 * scale}px`,
+    padding: `${48 * scale}px ${36 * scale}px`,
+    boxShadow: style.environmentBg
+      ? `0 ${20 * scale}px ${50 * scale}px ${style.letterShadow || "rgba(0,0,0,0.35)"}`
+      : "none",
     fontFamily: getFontFamily(letter.fontId),
     fontSize: `${letter.fontSize * scale}px`,
     lineHeight: LINE_HEIGHT_FACTOR,
     color: letter.inkColor,
     textAlign: letter.alignment,
     whiteSpace: "pre-wrap",
-    overflow: "hidden"
+    boxSizing: "border-box"
   });
-  textBox.textContent = buildLetterText(letter).join("\n");
-  container.appendChild(textBox);
-}
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
-async function renderLetterCanvas(letter, branding) {
-  const canvas = document.createElement("canvas");
-  canvas.width = CANVAS.width;
-  canvas.height = CANVAS.height;
-  const ctx = canvas.getContext("2d");
-  const bgImg = await loadImage(letter.themeImageUrl);
-  ctx.drawImage(bgImg, 0, 0, CANVAS.width, CANVAS.height);
-  ctx.fillStyle = letter.inkColor;
-  ctx.textBaseline = "top";
-  const lineHeight = letter.fontSize * LINE_HEIGHT_FACTOR;
-  const lines = buildWrappedLines(ctx, letter, letter.fontSize);
-  let y = LETTER_AREA.top;
-  lines.forEach(line => {
-    let x = LETTER_AREA.left;
-    if (letter.alignment === "center") { ctx.textAlign = "center"; x = LETTER_AREA.left + LETTER_AREA.width / 2; }
-    else if (letter.alignment === "right") { ctx.textAlign = "right"; x = LETTER_AREA.left + LETTER_AREA.width; }
-    else ctx.textAlign = "left";
-    ctx.fillText(line, x, y);
-    y += lineHeight;
-  });
-  if (branding && branding.watermarkEnabled && branding.logoUrl) {
-    const logoImg = await loadImage(branding.logoUrl);
-    const w = branding.watermarkSize || 220;
-    const h = w * (logoImg.height / logoImg.width);
-    let lx = (CANVAS.width - w) / 2;
-    if (branding.watermarkPosition === "bottom-left") lx = 60;
-    if (branding.watermarkPosition === "bottom-right") lx = CANVAS.width - w - 60;
-    const ly = CANVAS.height - h - 60;
-    ctx.globalAlpha = branding.watermarkOpacity ?? 0.8;
-    ctx.drawImage(logoImg, lx, ly, w, h);
-    ctx.globalAlpha = 1;
-    if (branding.websiteUrl) {
-      ctx.font = "28px 'Inter', sans-serif";
-      ctx.fillStyle = "#00000099";
-      ctx.textAlign = "center";
-      ctx.fillText(branding.websiteUrl, CANVAS.width / 2, ly + h + 10);
-    }
+  if (style.letterPattern) {
+    page.style.backgroundImage = style.letterPattern;
+    page.style.backgroundSize = style.letterPatternSize || "auto";
   }
-  return canvas;
+  page.textContent = buildLetterText(letter).join("\n");
+  container.appendChild(page);
 }
 
 document.getElementById('dearu-footer-year').textContent = new Date().getFullYear();
@@ -655,6 +694,8 @@ document.getElementById('dearu-footer-year').textContent = new Date().getFullYea
 const state = {
   themeId: null,
   themeImageUrl: null,
+  themeStyle: null,       // new: set when the selected theme is a flow-layout theme
+  charLimit: DEFAULT_CHAR_LIMIT,
   backgroundTone: null,
   to: "",
   from: "",
@@ -674,18 +715,29 @@ const offscreenCanvas = document.createElement("canvas");
 const offscreenCtx = offscreenCanvas.getContext("2d");
 
 const previewEl = document.getElementById('previewEl');
-const previewFrame = document.querySelector('.preview-frame');
+const previewFrame = document.getElementById('previewFrame');
+const previewHint = document.getElementById('previewHint');
 
 function currentScale() {
   return previewFrame.getBoundingClientRect().width / CANVAS.width;
 }
 
 function updatePreview() {
-  if (!state.themeImageUrl) return;
+  if (!state.themeId) return;
+  const isFlow = state.themeStyle && state.themeStyle.layoutType === "flow";
+  previewFrame.classList.toggle("flow-mode", !!isFlow);
+  previewHint.textContent = isFlow
+    ? "Live preview — scroll to see the full letter. This theme has no length limit."
+    : "Live preview — this is exactly how your letter will look.";
   renderLetterDOM(previewEl, state, currentScale());
 }
 
+function isFlowTheme() {
+  return !!(state.themeStyle && state.themeStyle.layoutType === "flow");
+}
+
 function runOverflowCheck() {
+  if (isFlowTheme()) return { fits: true }; // flow themes have no fixed box to overflow
   if (!state.body) return { fits: true };
   return checkOverflow(offscreenCtx, state);
 }
@@ -731,8 +783,15 @@ function validateAndRefresh() {
 
 function updateCharCounter() {
   const counter = document.getElementById('charCounter');
-  counter.textContent = `${state.body.length} / ${CHAR_LIMIT}`;
-  counter.classList.toggle('over', state.body.length >= CHAR_LIMIT);
+  if (isFlowTheme()) {
+    counter.textContent = `${state.body.length} characters — no limit on this theme`;
+    counter.classList.add('unlimited');
+    counter.classList.remove('over');
+  } else {
+    counter.classList.remove('unlimited');
+    counter.textContent = `${state.body.length} / ${state.charLimit}`;
+    counter.classList.toggle('over', state.body.length >= state.charLimit);
+  }
 }
 
 function updateNextButtons(fits) {
@@ -788,7 +847,20 @@ async function loadThemes() {
     themes.forEach(theme => {
       const thumb = document.createElement('div');
       thumb.className = 'theme-thumb';
-      thumb.style.backgroundImage = `url(${theme.thumbnailUrl || theme.imageUrl})`;
+      if (theme.style && theme.style.layoutType === 'flow') {
+        // Style-based theme: no imageUrl at all, render its own swatch.
+        thumb.style.background = theme.style.environmentBg || theme.style.letterBg || '#eee';
+        if (theme.style.letterPattern) {
+          thumb.style.backgroundImage = `${theme.style.environmentBg ? theme.style.environmentBg + ',' : ''}${theme.style.letterPattern}`;
+          thumb.style.backgroundSize = `cover, ${theme.style.letterPatternSize || 'auto'}`;
+        }
+        const badge = document.createElement('span');
+        badge.className = 'theme-unlimited-badge';
+        badge.textContent = 'Unlimited';
+        thumb.appendChild(badge);
+      } else {
+        thumb.style.backgroundImage = `url(${theme.thumbnailUrl || theme.imageUrl})`;
+      }
       thumb.dataset.themeId = theme.id;
       thumb.addEventListener('click', () => selectTheme(theme));
       grid.appendChild(thumb);
@@ -800,9 +872,20 @@ async function loadThemes() {
 
 function selectTheme(theme) {
   state.themeId = theme.id;
-  state.themeImageUrl = theme.imageUrl;
+  state.themeImageUrl = theme.imageUrl || null;
+  state.themeStyle = theme.style || null;
+  state.charLimit = (theme.style && theme.style.charLimit) || DEFAULT_CHAR_LIMIT;
   state.backgroundTone = theme.backgroundTone;
   contrastDismissed = false;
+
+  // Re-clamp existing body text if switching from an unlimited theme down
+  // to a limited one.
+  if (state.body.length > state.charLimit) {
+    state.body = state.body.slice(0, state.charLimit);
+    document.getElementById('bodyInput').value = state.body;
+  }
+  document.getElementById('bodyInput').maxLength = state.charLimit;
+
   document.querySelectorAll('.theme-thumb').forEach(t => {
     t.classList.toggle('selected', t.dataset.themeId === theme.id);
   });
@@ -821,7 +904,7 @@ document.getElementById('fromInput').addEventListener('input', (e) => {
 });
 
 document.getElementById('bodyInput').addEventListener('input', (e) => {
-  state.body = e.target.value.slice(0, CHAR_LIMIT);
+  state.body = e.target.value.slice(0, state.charLimit);
   validateAndRefresh();
 });
 
@@ -958,6 +1041,12 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
       body: state.body,
       salutation: state.salutation,
       themeId: state.themeId,
+      // Denormalized theme data, resolved once here at write time — every
+      // read page can render straight off the letter doc. themeImageUrl is
+      // null for flow-layout (style-based) themes; themeStyle is null for
+      // classic fixed-canvas image themes. Exactly one of the two is set.
+      themeImageUrl: state.themeImageUrl,
+      themeStyle: state.themeStyle,
       fontId: state.fontId,
       fontSize: state.fontSize,
       inkColor: state.inkColor,
