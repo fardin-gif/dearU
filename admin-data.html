@@ -772,31 +772,99 @@ function buildLetterText(letter) {
   return lines;
 }
 
+const STAR_FIELD_CSS =
+  "radial-gradient(1.5px 1.5px at 12% 20%, rgba(255,255,255,.9), transparent)," +
+  "radial-gradient(1px 1px at 24% 65%, rgba(255,255,255,.7), transparent)," +
+  "radial-gradient(1.5px 1.5px at 34% 12%, rgba(255,255,255,.8), transparent)," +
+  "radial-gradient(1px 1px at 47% 82%, rgba(255,255,255,.55), transparent)," +
+  "radial-gradient(1.5px 1.5px at 66% 24%, rgba(255,255,255,.85), transparent)," +
+  "radial-gradient(1px 1px at 78% 70%, rgba(255,255,255,.6), transparent)," +
+  "radial-gradient(1.5px 1.5px at 88% 15%, rgba(255,255,255,.75), transparent)," +
+  "radial-gradient(1px 1px at 92% 55%, rgba(255,255,255,.5), transparent)," +
+  "radial-gradient(1px 1px at 8% 85%, rgba(255,255,255,.5), transparent)," +
+  "radial-gradient(1.5px 1.5px at 58% 90%, rgba(255,255,255,.6), transparent)";
+
 function renderLetterDOM(container, letter, scale = 1) {
+  container.innerHTML = "";
+  const isFlow = letter.themeStyle && letter.themeStyle.layoutType === "flow";
+
+  if (!isFlow) {
+    container.style.position = "relative";
+    container.style.width = `${CANVAS.width * scale}px`;
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.minHeight = "";
+    container.style.background = "none";
+    container.style.overflow = "hidden";
+    container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+    container.style.backgroundSize = "cover";
+    const textBox = document.createElement("div");
+    Object.assign(textBox.style, {
+      position: "absolute",
+      left: `${LETTER_AREA.left * scale}px`,
+      top: `${LETTER_AREA.top * scale}px`,
+      width: `${LETTER_AREA.width * scale}px`,
+      height: `${LETTER_AREA.height * scale}px`,
+      fontFamily: getFontFamily(letter.fontId),
+      fontSize: `${letter.fontSize * scale}px`,
+      lineHeight: LINE_HEIGHT_FACTOR,
+      color: letter.inkColor,
+      textAlign: letter.alignment,
+      whiteSpace: "pre-wrap",
+      overflow: "hidden"
+    });
+    textBox.textContent = buildLetterText(letter).join("\n");
+    container.appendChild(textBox);
+    return;
+  }
+
+  const style = letter.themeStyle;
   container.style.position = "relative";
   container.style.width = `${CANVAS.width * scale}px`;
-  container.style.height = `${CANVAS.height * scale}px`;
-  container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+  container.style.minHeight = `${CANVAS.height * scale}px`;
+  container.style.height = "auto";
+  container.style.background = style.environmentBg || style.letterBg || "#f6f4ee";
   container.style.backgroundSize = "cover";
-  container.innerHTML = "";
-  const textBox = document.createElement("div");
-  Object.assign(textBox.style, {
-    position: "absolute",
-    left: `${LETTER_AREA.left * scale}px`,
-    top: `${LETTER_AREA.top * scale}px`,
-    width: `${LETTER_AREA.width * scale}px`,
-    height: `${LETTER_AREA.height * scale}px`,
+  container.style.overflow = "visible";
+  container.style.display = "flex";
+  container.style.justifyContent = "center";
+  container.style.padding = `${40 * scale}px 0`;
+  container.style.boxSizing = "border-box";
+
+  if (style.environmentBg && style.decor === "stars") {
+    const decor = document.createElement("div");
+    Object.assign(decor.style, {
+      position: "absolute", inset: "0", pointerEvents: "none",
+      backgroundImage: STAR_FIELD_CSS
+    });
+    container.appendChild(decor);
+  }
+
+  const page = document.createElement("div");
+  Object.assign(page.style, {
+    position: "relative",
+    width: `${(CANVAS.width - 120) * scale}px`,
+    minHeight: `${(CANVAS.height - 160) * scale}px`,
+    backgroundColor: style.letterBg || "#ffffff",
+    borderRadius: `${4 * scale}px`,
+    padding: `${48 * scale}px ${36 * scale}px`,
+    boxShadow: style.environmentBg
+      ? `0 ${20 * scale}px ${50 * scale}px ${style.letterShadow || "rgba(0,0,0,0.35)"}`
+      : "none",
     fontFamily: getFontFamily(letter.fontId),
     fontSize: `${letter.fontSize * scale}px`,
     lineHeight: LINE_HEIGHT_FACTOR,
     color: letter.inkColor,
     textAlign: letter.alignment,
     whiteSpace: "pre-wrap",
-    overflow: "hidden"
+    boxSizing: "border-box"
   });
-  textBox.textContent = buildLetterText(letter).join("\n");
-  container.appendChild(textBox);
-}
+  if (style.letterPattern) {
+    page.style.backgroundImage = style.letterPattern;
+    page.style.backgroundSize = style.letterPatternSize || "auto";
+  }
+  page.textContent = buildLetterText(letter).join("\n");
+  container.appendChild(page);
+  }
 
 const FALLBACK_THEME_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS.width}" height="${CANVAS.height}"><rect width="100%" height="100%" fill="#EFEAE0"/></svg>`
