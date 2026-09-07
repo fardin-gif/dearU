@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Manager · DearU Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Playfair+Display:wght@400;600&family=Inter:wght@400;600&family=Courier+Prime&family=Caveat&family=Special+Elite&family=Source+Serif+4:wght@400;600&family=Noto+Serif+Bengali:wght@400;600&family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&family=Baloo+Da+2:wght@400;600&family=Noto+Sans+Bengali:wght@400;600&family=Mina:wght@400;700&family=Atma&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F1E9;
+    --paper-raised: #FBF8F3;
+    --ink: #211D19;
+    --ink-soft: rgba(33, 29, 25, 0.62);
+    --ink-faint: rgba(33, 29, 25, 0.4);
+    --hairline: rgba(33, 29, 25, 0.12);
+    --hairline-strong: rgba(33, 29, 25, 0.22);
+    --navy: #1B2A4A;
+    --navy-soft: rgba(27, 42, 74, 0.08);
+    --brown: #4A2E1D;
+    --deep-red: #5C1A1A;
+    --deep-red-soft: rgba(92, 26, 26, 0.08);
+    --forest: #1F3D2B;
+    --forest-soft: rgba(31, 61, 43, 0.09);
+    --warn: #8A6116;
+    --warn-bg: #FBF3E4;
+    --radius: 3px;
+    --card-bg: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  a { color: inherit; }
+  button, input, select, textarea { font: inherit; }
+
+  /* ---------- Header / admin shell nav ---------- */
+
+  header.admin-shell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--paper-raised);
+    flex-wrap: wrap;
+  }
+
+  .wordmark { display: inline-flex; align-items: center; line-height: 0; }
+
+  nav.admin-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  nav.admin-nav a, nav.admin-nav button {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  nav.admin-nav a:hover, nav.admin-nav button:hover {
+    background: var(--navy-soft);
+    color: var(--ink);
+  }
+
+  nav.admin-nav a.current {
+    color: var(--navy);
+    background: var(--navy-soft);
+    font-weight: 600;
+  }
+
+  /* ---------- Main ---------- */
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  #page-content { display: block; }
+
+  .page-heading {
+    margin-bottom: 24px;
+  }
+  .page-heading h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 28px;
+    margin: 0 0 4px;
+  }
+  .page-heading p {
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  /* ---- List view: filter bar ---- */
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 22px;
+    padding: 14px;
+    background: var(--paper-raised);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+  }
+
+  .filter-bar select,
+  .filter-bar input[type="text"] {
+    padding: 8px 10px;
+    font-size: 13px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .filter-bar input[type="text"] { min-width: 200px; flex: 1 1 200px; }
+
+  .filter-bar button {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--hairline-strong);
+    background: var(--ink);
+    color: #fff;
+    cursor: pointer;
+  }
+  .filter-bar button.secondary {
+    background: #fff;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .filter-bar button:hover { opacity: 0.85; }
+
+  /* ---- List rows ---- */
+
+  #letter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .letter-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+  .letter-row:hover { border-color: var(--hairline-strong); }
+
+  .letter-row-main { flex: 1; min-width: 0; }
+  .letter-row-to {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .letter-row-sub {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .letter-row-id {
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-family: 'Courier Prime', monospace;
+  }
+
+  .letter-row-side {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .status-badge.public { background: var(--forest-soft); color: var(--forest); }
+  .status-badge.hidden { background: var(--warn-bg); color: var(--warn); }
+  .status-badge.deleted { background: var(--deep-red-soft); color: var(--deep-red); }
+
+  .letter-row-time {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .empty-note, .error-note, .loading-note {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    padding: 30px 0;
+    text-align: center;
+  }
+  .error-note { color: var(--deep-red); }
+
+  #load-more-btn {
+    display: block;
+    margin: 18px auto 0;
+    padding: 9px 20px;
+    font-size: 13px;
+    background: none;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  #load-more-btn:hover { color: var(--ink); }
+
+  /* ---- Detail / editor view ---- */
+
+  #detail-view { display: none; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--ink); }
+
+  .doc-id-line {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    font-family: 'Courier Prime', monospace;
+    margin-bottom: 20px;
+  }
+
+  .editor-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 280px) 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .editor-grid { grid-template-columns: 1fr; }
+  }
+
+  .preview-wrap {
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #eee;
+    position: sticky;
+    top: 20px;
+  }
+  .preview-scale { transform-origin: top left; }
+  .preview-caption {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .field-block {
+    background: var(--card-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .field-block h3 {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 14px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 12px;
+    align-items: start;
+    margin-bottom: 12px;
+  }
+  .field-row:last-child { margin-bottom: 0; }
+  .field-row label {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    padding-top: 9px;
+  }
+  @media (max-width: 560px) {
+    .field-row { grid-template-columns: 1fr; }
+    .field-row label { padding-top: 0; }
+  }
+
+  .field-row input[type="text"],
+  .field-row input[type="url"],
+  .field-row input[type="number"],
+  .field-row select,
+  .field-row textarea {
+    width: 100%;
+    padding: 9px 11px;
+    font-size: 13.5px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    background: #FCFBF9;
+    color: var(--ink);
+  }
+  .field-row input:focus,
+  .field-row select:focus,
+  .field-row textarea:focus { outline: none; border-color: var(--navy); }
+  .field-row textarea { min-height: 140px; resize: vertical; line-height: 1.5; }
+
+  .readonly-value {
+    padding: 9px 11px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+  }
+
+  .char-counter {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-align: right;
+    margin-top: 4px;
+  }
+  .char-counter.over { color: var(--deep-red); }
+
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-row input[type="color"] {
+    width: 36px; height: 34px; padding: 0; border: 1px solid var(--hairline-strong);
+    border-radius: 6px; cursor: pointer; background: none;
+  }
+  .color-row input[type="text"] { flex: 1; }
+
+  .theme-url-row { display: flex; gap: 8px; align-items: flex-start; }
+  .theme-url-row input { flex: 1; }
+  .theme-url-row button {
+    flex-shrink: 0;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    border: 1px solid var(--hairline-strong);
+    border-radius: 6px;
+    background: var(--paper-raised);
+    color: var(--ink-soft);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .theme-url-row button:hover { color: var(--ink); }
+  .theme-url-row button:disabled { opacity: 0.5; cursor: default; }
+
+  .inline-error {
+    display: none;
+    font-size: 13px;
+    color: var(--deep-red);
+    background: var(--deep-red-soft);
+    border-radius: 6px;
+    padding: 9px 11px;
+    margin-bottom: 14px;
+  }
+  .inline-error.visible { display: block; }
+
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .save-btn {
+    padding: 11px 22px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    background: var(--navy);
+    color: #fff;
+    cursor: pointer;
+  }
+  .save-btn:hover { opacity: 0.9; }
+  .save-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .delete-btn {
+    padding: 11px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--deep-red);
+    background: #fff;
+    color: var(--deep-red);
+    cursor: pointer;
+  }
+  .delete-btn:hover { background: var(--deep-red-soft); }
+
+  .raw-json-toggle {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: var(--hairline-strong);
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 6px;
+  }
+  .raw-json-toggle:hover { color: var(--ink-soft); }
+
+  #raw-json-panel {
+    display: none;
+    margin-top: 10px;
+    padding: 14px 16px;
+    background: var(--ink);
+    color: #E8E4DC;
+    border-radius: 8px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 6px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+  .toast.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="app-root">
+  <header class="admin-shell">
+    <a href="index.html" class="wordmark"><img style="width: 120px; height: auto;" src="header-logo.png" alt="DearU"></a>
+    <nav class="admin-nav">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <a href="admin-themes.html">Themes</a>
+      <a href="admin-letters.html">Letters</a>
+      <a href="admin-reports.html">Reports</a>
+      <a href="admin-data.html" class="current">Data</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="page-content">
+
+      <!-- LIST VIEW -->
+      <div id="list-view">
+        <div class="page-heading">
+          <h1>Letters — Data Manager</h1>
+          <p>Every letter in Firestore, any status. Click one to view and edit every field.</p>
+        </div>
+
+        <div class="filter-bar">
+          <select id="sort-select">
+            <option value="desc">Newest first</option>
+            <option value="asc">Oldest first</option>
+          </select>
+          <select id="status-select">
+            <option value="all">All statuses</option>
+            <option value="public">Public</option>
+            <option value="hidden">Hidden</option>
+            <option value="deleted">Deleted</option>
+          </select>
+          <input type="text" id="search-input" placeholder="Search by recipient name…">
+          <button type="button" id="apply-filters-btn">Apply</button>
+          <button type="button" id="clear-filters-btn" class="secondary">Clear</button>
+        </div>
+
+        <div id="letter-list"></div>
+        <div class="empty-note" id="empty-note" style="display:none;">No letters match these filters.</div>
+        <button id="load-more-btn" style="display:none;">Load more</button>
+      </div>
+
+      <!-- DETAIL / EDITOR VIEW -->
+      <div id="detail-view">
+        <a class="back-link" id="back-link">← Back to all letters</a>
+        <div class="doc-id-line" id="doc-id-line"></div>
+
+        <div class="inline-error" id="save-error"></div>
+
+        <div class="editor-grid">
+          <div>
+            <div class="preview-wrap">
+              <div id="preview-container" class="preview-scale"></div>
+            </div>
+            <p class="preview-caption">Live preview — reflects unsaved edits</p>
+          </div>
+
+          <div>
+            <div class="field-block">
+              <h3>Content</h3>
+              <div class="field-row">
+                <label for="field-to">To</label>
+                <input type="text" id="field-to">
+              </div>
+              <div class="field-row">
+                <label for="field-salutation">Salutation</label>
+                <select id="field-salutation">
+                  <option value="Dear">Dear</option>
+                  <option value="প্রিয়">প্রিয়</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <label for="field-from">From</label>
+                <input type="text" id="field-from" placeholder="(anonymous if blank)">
+              </div>
+              <div class="field-row">
+                <label for="field-body">Body</label>
+                <div>
+                  <textarea id="field-body" maxlength="1500"></textarea>
+                  <div class="char-counter" id="body-counter">0 / 1500</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <h3>Appearance</h3>
+              <div class="field-row">
+                <label for="field-theme-id">Theme ID</label>
+                <input type="text" id="field-theme-id" placeholder="themes/{id} document id">
+              </div>
+              <div class="field-row">
+                <label for="field-theme-url">Theme image URL</label>
+                <div class="theme-url-row">
+                  <input type="url" id="field-theme-url">
+                  <button type="button" id="resolve-theme-btn">Fetch from Theme ID</button>
+                </div>
+              </div>
+              <div class="field-row">
+                <label for="field-font">Font</label>
+                <select id="field-font"></select>
+              </div>
+              <div class="field-row">
+                <label for="field-font-size">Font size</label>
+                <input type="number" id="field-font-size" min="24" max="48" step="1">
+              </div>
+              <div class="field-row">
+                <label for="field-ink-color">Ink color</label>
+                <div class="color-row">
+                  <input type="color" id="field-ink-color-picker">
+                  <input type="text" id="field-ink-color">
+                </div>
+              </div>
+              <div class="field-row">
+                <label for="field-alignment">Alignment</label>
+                <select id="field-alignment">
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <h3>Status &amp; metadata</h3>
+              <div class="field-row">
+                <label for="field-status">Status</label>
+                <select id="field-status">
+                  <option value="public">Public</option>
+                  <option value="hidden">Hidden</option>
+                  <option value="deleted">Deleted</option>
+                </select>
+              </div>
+              <div class="field-row">
+                <label>Created</label>
+                <div class="readonly-value" id="field-created-at">—</div>
+              </div>
+              <div class="field-row">
+                <label>Search keywords</label>
+                <div class="readonly-value" id="field-keywords-note">Recomputed automatically from "To" on save.</div>
+              </div>
+            </div>
+
+            <div class="field-block">
+              <div class="action-row">
+                <button type="button" class="save-btn" id="save-btn">Save changes</button>
+                <button type="button" class="delete-btn" id="delete-btn">Delete permanently</button>
+              </div>
+              <button type="button" class="raw-json-toggle" id="raw-json-toggle">View raw document JSON</button>
+              <div id="raw-json-panel"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, query, where,
+  orderBy, limit, startAfter, getDocs
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDYsN40s4Na18BUXNBO4lmmVkb7uDJzjUU",
+  authDomain: "dearu-2026.firebaseapp.com",
+  projectId: "dearu-2026",
+  storageBucket: "dearu-2026.firebasestorage.app",
+  messagingSenderId: "390679117944",
+  appId: "1:390679117944:web:2021b350ac4e1510a66d8d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ===================== Canonical constants ===================== */
+const CANVAS = { width: 1414, height: 2000 };
+const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
+const CHAR_LIMIT = 1500;
+const LINE_HEIGHT_FACTOR = 1.5;
+
+// Union of every fontId that has ever been valid across write.html's list
+// and the viewer pages' list (these two drifted apart historically — see
+// the earlier font-catalog review). Editing an existing letter should never
+// silently reassign its font just because this tool only knew one of the
+// two lists, so every known id is offered here, grouped for clarity.
+const FONTS = {
+  en: [
+    { id: "en-literary-serif", name: "Literary Serif", family: "'Lora', serif" },
+    { id: "en-elegant-serif", name: "Elegant Serif", family: "'Cormorant Garamond', serif" },
+    { id: "en-editorial-serif", name: "Editorial Serif", family: "'Playfair Display', serif" },
+    { id: "en-clean-sans", name: "Clean Sans", family: "'Inter', sans-serif" },
+    { id: "en-typewriter", name: "Typewriter", family: "'Courier Prime', monospace" },
+    { id: "en-handwritten", name: "Handwritten", family: "'Caveat', cursive" },
+    { id: "en-special-elite", name: "Special Elite", family: "'Special Elite', monospace" },
+    { id: "en-source-serif", name: "Source Serif 4", family: "'Source Serif 4', serif" }
+  ],
+  bn: [
+    { id: "bn-serif", name: "Noto Serif Bengali", family: "'Noto Serif Bengali', serif" },
+    { id: "bn-sans", name: "Hind Siliguri", family: "'Hind Siliguri', sans-serif" },
+    { id: "bn-classic", name: "Tiro Bangla", family: "'Tiro Bangla', serif" },
+    { id: "bn-rounded", name: "Baloo Da 2", family: "'Baloo Da 2', sans-serif" },
+    { id: "bn-sans-alt", name: "Noto Sans Bengali", family: "'Noto Sans Bengali', sans-serif" },
+    { id: "bn-mina", name: "Mina", family: "'Mina', sans-serif" },
+    { id: "bn-handwritten", name: "Atma", family: "'Atma', cursive" }
+  ]
+};
+
+const INK_PRESETS = ["#1A1A1A", "#4A2E1D", "#1B2A4A", "#5C1A1A", "#1F3D2B", "#2E2E2E"];
+
+/* ===================== Canonical Letter Renderer ===================== */
+function normalizeTo(to) { return to.trim().toLowerCase(); }
+
+function buildToKeywords(to) {
+  const norm = normalizeTo(to);
+  const keywords = [];
+  for (let i = 1; i <= Math.min(norm.length, 40); i++) keywords.push(norm.slice(0, i));
+  return keywords;
+}
+
+function getFontFamily(fontId) {
+  const all = [...FONTS.en, ...FONTS.bn];
+  const found = all.find(f => f.id === fontId);
+  return found ? found.family : FONTS.en[0].family;
+}
+
+function buildLetterText(letter) {
+  const lines = [`${letter.salutation} ${letter.to},`, "", letter.body, ""];
+  if (letter.from && letter.from.trim().length > 0) lines.push(`— ${letter.from.trim()}`);
+  return lines;
+}
+
+function renderLetterDOM(container, letter, scale = 1) {
+  container.style.position = "relative";
+  container.style.width = `${CANVAS.width * scale}px`;
+  container.style.height = `${CANVAS.height * scale}px`;
+  container.style.backgroundImage = `url(${letter.themeImageUrl})`;
+  container.style.backgroundSize = "cover";
+  container.innerHTML = "";
+  const textBox = document.createElement("div");
+  Object.assign(textBox.style, {
+    position: "absolute",
+    left: `${LETTER_AREA.left * scale}px`,
+    top: `${LETTER_AREA.top * scale}px`,
+    width: `${LETTER_AREA.width * scale}px`,
+    height: `${LETTER_AREA.height * scale}px`,
+    fontFamily: getFontFamily(letter.fontId),
+    fontSize: `${letter.fontSize * scale}px`,
+    lineHeight: LINE_HEIGHT_FACTOR,
+    color: letter.inkColor,
+    textAlign: letter.alignment,
+    whiteSpace: "pre-wrap",
+    overflow: "hidden"
+  });
+  textBox.textContent = buildLetterText(letter).join("\n");
+  container.appendChild(textBox);
+}
+
+const FALLBACK_THEME_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS.width}" height="${CANVAS.height}"><rect width="100%" height="100%" fill="#EFEAE0"/></svg>`
+);
+
+/* ===================== DOM refs ===================== */
+const toast = document.getElementById("toast");
+
+const listView = document.getElementById("list-view");
+const detailView = document.getElementById("detail-view");
+const letterListEl = document.getElementById("letter-list");
+const emptyNote = document.getElementById("empty-note");
+const loadMoreBtn = document.getElementById("load-more-btn");
+
+const sortSelect = document.getElementById("sort-select");
+const statusSelect = document.getElementById("status-select");
+const searchInput = document.getElementById("search-input");
+const applyFiltersBtn = document.getElementById("apply-filters-btn");
+const clearFiltersBtn = document.getElementById("clear-filters-btn");
+
+const backLink = document.getElementById("back-link");
+const docIdLine = document.getElementById("doc-id-line");
+const saveError = document.getElementById("save-error");
+const previewContainer = document.getElementById("preview-container");
+const previewWrap = document.querySelector(".preview-wrap");
+
+const fieldTo = document.getElementById("field-to");
+const fieldSalutation = document.getElementById("field-salutation");
+const fieldFrom = document.getElementById("field-from");
+const fieldBody = document.getElementById("field-body");
+const bodyCounter = document.getElementById("body-counter");
+const fieldThemeId = document.getElementById("field-theme-id");
+const fieldThemeUrl = document.getElementById("field-theme-url");
+const resolveThemeBtn = document.getElementById("resolve-theme-btn");
+const fieldFont = document.getElementById("field-font");
+const fieldFontSize = document.getElementById("field-font-size");
+const fieldInkColorPicker = document.getElementById("field-ink-color-picker");
+const fieldInkColor = document.getElementById("field-ink-color");
+const fieldAlignment = document.getElementById("field-alignment");
+const fieldStatus = document.getElementById("field-status");
+const fieldCreatedAt = document.getElementById("field-created-at");
+
+const saveBtn = document.getElementById("save-btn");
+const deleteBtn = document.getElementById("delete-btn");
+const rawJsonToggle = document.getElementById("raw-json-toggle");
+const rawJsonPanel = document.getElementById("raw-json-panel");
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("visible");
+  setTimeout(() => toast.classList.remove("visible"), 2200);
+}
+
+/* ===================== Populate font dropdown ===================== */
+function populateFontSelect(currentFontId) {
+  fieldFont.innerHTML = "";
+  const groups = [["English", FONTS.en], ["বাংলা", FONTS.bn]];
+  let matched = false;
+  groups.forEach(([label, list]) => {
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = label;
+    list.forEach(f => {
+      const opt = document.createElement("option");
+      opt.value = f.id;
+      opt.textContent = f.name;
+      if (f.id === currentFontId) { opt.selected = true; matched = true; }
+      optgroup.appendChild(opt);
+    });
+    fieldFont.appendChild(optgroup);
+  });
+  // If the stored fontId isn't in either known list, preserve it instead of
+  // silently reassigning the letter to a different font on save.
+  if (!matched && currentFontId) {
+    const opt = document.createElement("option");
+    opt.value = currentFontId;
+    opt.textContent = `Unknown: ${currentFontId}`;
+    opt.selected = true;
+    fieldFont.prepend(opt);
+  }
+}
+
+/* ===================== List view ===================== */
+const PAGE_SIZE = 20;
+let lastVisibleDoc = null;
+let hasMorePages = true;
+let activeSort = "desc";
+let activeStatus = "all";
+let activeSearch = "";
+
+function relativeTime(timestamp) {
+  if (!timestamp || !timestamp.toDate) return "";
+  const date = timestamp.toDate();
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 30) return `${diffDay}d ago`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function letterRowTemplate(id, data) {
+  const row = document.createElement("div");
+  row.className = "letter-row";
+  row.addEventListener("click", () => navigateToDetail(id));
+
+  const main = document.createElement("div");
+  main.className = "letter-row-main";
+  const toEl = document.createElement("p");
+  toEl.className = "letter-row-to";
+  toEl.textContent = `${data.salutation || "Dear"} ${data.to || "(unknown)"}`;
+  const subEl = document.createElement("p");
+  subEl.className = "letter-row-sub";
+  subEl.textContent = data.from && data.from.trim() ? `From ${data.from.trim()}` : "Anonymous";
+  const idEl = document.createElement("p");
+  idEl.className = "letter-row-id";
+  idEl.textContent = id;
+  main.appendChild(toEl);
+  main.appendChild(subEl);
+  main.appendChild(idEl);
+
+  const side = document.createElement("div");
+  side.className = "letter-row-side";
+  const badge = document.createElement("span");
+  badge.className = `status-badge ${data.status || "public"}`;
+  badge.textContent = data.status || "public";
+  const timeEl = document.createElement("span");
+  timeEl.className = "letter-row-time";
+  timeEl.textContent = relativeTime(data.createdAt);
+  side.appendChild(badge);
+  side.appendChild(timeEl);
+
+  row.appendChild(main);
+  row.appendChild(side);
+  return row;
+}
+
+function buildListQuery(isFirstPage) {
+  const lettersCol = collection(db, "letters");
+  const clauses = [];
+
+  if (activeSearch) clauses.push(where("toKeywords", "array-contains", normalizeTo(activeSearch)));
+  if (activeStatus !== "all") clauses.push(where("status", "==", activeStatus));
+  clauses.push(orderBy("createdAt", activeSort));
+  if (!isFirstPage && lastVisibleDoc) clauses.push(startAfter(lastVisibleDoc));
+  clauses.push(limit(PAGE_SIZE));
+
+  // NOTE: combining a search term and/or a status filter with orderBy(createdAt)
+  // requires a matching Firestore composite index for that exact combination
+  // and sort direction. If one doesn't exist yet, Firestore throws
+  // failed-precondition with a console link to auto-create it — see the
+  // catch block below.
+  return query(lettersCol, ...clauses);
+}
+
+async function loadList(isFirstPage) {
+  if (isFirstPage) {
+    lastVisibleDoc = null;
+    hasMorePages = true;
+    letterListEl.innerHTML = "";
+    emptyNote.style.display = "none";
+  }
+  try {
+    const snap = await getDocs(buildListQuery(isFirstPage));
+    if (snap.empty && isFirstPage) {
+      emptyNote.style.display = "block";
+      loadMoreBtn.style.display = "none";
+      return;
+    }
+    snap.forEach(docSnap => {
+      letterListEl.appendChild(letterRowTemplate(docSnap.id, docSnap.data()));
+    });
+    lastVisibleDoc = snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : lastVisibleDoc;
+    hasMorePages = snap.docs.length === PAGE_SIZE;
+    loadMoreBtn.style.display = hasMorePages ? "block" : "none";
+  } catch (err) {
+    console.error("DearU admin-data list error:", err);
+    if (err && err.code === "failed-precondition") {
+      letterListEl.innerHTML = '<div class="error-note">This filter combination needs a Firestore index that doesn\'t exist yet. Check the browser console — Firestore\'s error includes a direct link to create it.</div>';
+    } else {
+      letterListEl.innerHTML = '<div class="error-note">Couldn\'t load letters.</div>';
+    }
+    loadMoreBtn.style.display = "none";
+  }
+}
+
+applyFiltersBtn.addEventListener("click", () => {
+  activeSort = sortSelect.value;
+  activeStatus = statusSelect.value;
+  activeSearch = searchInput.value.trim();
+  loadList(true);
+});
+searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") applyFiltersBtn.click(); });
+clearFiltersBtn.addEventListener("click", () => {
+  sortSelect.value = "desc";
+  statusSelect.value = "all";
+  searchInput.value = "";
+  activeSort = "desc";
+  activeStatus = "all";
+  activeSearch = "";
+  loadList(true);
+});
+loadMoreBtn.addEventListener("click", () => loadList(false));
+
+/* ===================== Detail / editor view ===================== */
+let currentLetterId = null;
+let originalData = null;
+
+function setPreviewScale() {
+  const available = previewWrap.clientWidth || 280;
+  const scale = Math.min(1, available / CANVAS.width);
+  previewContainer.style.transform = `scale(${scale})`;
+  previewContainer.style.width = `${CANVAS.width}px`;
+  previewContainer.style.height = `${CANVAS.height}px`;
+  previewWrap.style.height = `${CANVAS.height * scale}px`;
+}
+
+function currentFormState() {
+  return {
+    to: fieldTo.value,
+    salutation: fieldSalutation.value,
+    from: fieldFrom.value,
+    body: fieldBody.value,
+    themeId: fieldThemeId.value,
+    themeImageUrl: fieldThemeUrl.value || FALLBACK_THEME_IMAGE,
+    fontId: fieldFont.value,
+    fontSize: Number(fieldFontSize.value) || 30,
+    inkColor: fieldInkColor.value,
+    alignment: fieldAlignment.value,
+    status: fieldStatus.value
+  };
+}
+
+function repaintPreview() {
+  setPreviewScale();
+  renderLetterDOM(previewContainer, currentFormState(), 1);
+}
+
+function updateBodyCounter() {
+  const len = fieldBody.value.length;
+  bodyCounter.textContent = `${len} / ${CHAR_LIMIT}`;
+  bodyCounter.classList.toggle("over", len > CHAR_LIMIT);
+}
+
+[fieldTo, fieldSalutation, fieldFrom, fieldThemeId, fieldThemeUrl, fieldFont,
+ fieldFontSize, fieldInkColor, fieldAlignment].forEach(el => {
+  el.addEventListener("input", repaintPreview);
+});
+fieldBody.addEventListener("input", () => { updateBodyCounter(); repaintPreview(); });
+
+fieldInkColorPicker.addEventListener("input", () => {
+  fieldInkColor.value = fieldInkColorPicker.value;
+  repaintPreview();
+});
+fieldInkColor.addEventListener("input", () => {
+  if (/^#[0-9a-fA-F]{6}$/.test(fieldInkColor.value)) fieldInkColorPicker.value = fieldInkColor.value;
+});
+
+resolveThemeBtn.addEventListener("click", async () => {
+  const themeId = fieldThemeId.value.trim();
+  if (!themeId) { showToast("Enter a Theme ID first."); return; }
+  resolveThemeBtn.disabled = true;
+  resolveThemeBtn.textContent = "Fetching…";
+  try {
+    const themeSnap = await getDoc(doc(db, "themes", themeId));
+    if (!themeSnap.exists()) {
+      showToast("No theme found with that ID.");
+    } else {
+      const url = themeSnap.data().imageUrl || "";
+      fieldThemeUrl.value = url;
+      repaintPreview();
+      showToast("Theme image URL fetched.");
+    }
+  } catch (err) {
+    showToast("Couldn't fetch that theme.");
+  } finally {
+    resolveThemeBtn.disabled = false;
+    resolveThemeBtn.textContent = "Fetch from Theme ID";
+  }
+});
+
+function formatTimestampLong(timestamp) {
+  if (!timestamp || !timestamp.toDate) return "—";
+  return timestamp.toDate().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
+function renderRawJson(data) {
+  const displayable = { ...data };
+  if (displayable.createdAt && displayable.createdAt.toDate) {
+    displayable.createdAt = displayable.createdAt.toDate().toISOString() + " (Timestamp)";
+  }
+  rawJsonPanel.textContent = JSON.stringify(displayable, null, 2);
+}
+
+rawJsonToggle.addEventListener("click", () => {
+  const isHidden = rawJsonPanel.style.display === "none" || !rawJsonPanel.style.display;
+  rawJsonPanel.style.display = isHidden ? "block" : "none";
+  rawJsonToggle.textContent = isHidden ? "Hide raw document JSON" : "View raw document JSON";
+});
+
+async function loadDetail(id) {
+  saveError.classList.remove("visible");
+  try {
+    const snap = await getDoc(doc(db, "letters", id));
+    if (!snap.exists()) {
+      showToast("Letter not found.");
+      navigateToList();
+      return;
+    }
+    currentLetterId = id;
+    originalData = snap.data();
+
+    docIdLine.textContent = `Document ID: ${id}`;
+    fieldTo.value = originalData.to || "";
+    fieldSalutation.value = originalData.salutation || "Dear";
+    fieldFrom.value = originalData.from || "";
+    fieldBody.value = originalData.body || "";
+    fieldThemeId.value = originalData.themeId || "";
+    fieldThemeUrl.value = originalData.themeImageUrl || "";
+    populateFontSelect(originalData.fontId);
+    fieldFontSize.value = originalData.fontSize || 30;
+    fieldInkColor.value = originalData.inkColor || "#1A1A1A";
+    if (/^#[0-9a-fA-F]{6}$/.test(fieldInkColor.value)) fieldInkColorPicker.value = fieldInkColor.value;
+    fieldAlignment.value = originalData.alignment || "left";
+    fieldStatus.value = originalData.status || "public";
+    fieldCreatedAt.textContent = formatTimestampLong(originalData.createdAt);
+
+    updateBodyCounter();
+    renderRawJson(originalData);
+    rawJsonPanel.style.display = "none";
+    rawJsonToggle.textContent = "View raw document JSON";
+
+    requestAnimationFrame(repaintPreview);
+  } catch (err) {
+    showToast("Couldn't load this letter.");
+    console.error(err);
+  }
+}
+
+saveBtn.addEventListener("click", async () => {
+  if (!currentLetterId || !originalData) return;
+  saveError.classList.remove("visible");
+
+  const state = currentFormState();
+
+  // Client-side validation, mirroring the values the Firestore rules will
+  // also check — this just gives a friendlier error before the round trip.
+  if (!state.to.trim()) {
+    saveError.textContent = '"To" cannot be empty.';
+    saveError.classList.add("visible");
+    return;
+  }
+  if (!state.body.trim() || state.body.length > CHAR_LIMIT) {
+    saveError.textContent = `Body must be non-empty and ${CHAR_LIMIT} characters or fewer.`;
+    saveError.classList.add("visible");
+    return;
+  }
+  if (state.fontSize < 24 || state.fontSize > 48) {
+    saveError.textContent = "Font size must be between 24 and 48.";
+    saveError.classList.add("visible");
+    return;
+  }
+  if (!/^#[0-9a-fA-F]{6}$/.test(state.inkColor)) {
+    saveError.textContent = "Ink color must be a hex value like #1A1A1A.";
+    saveError.classList.add("visible");
+    return;
+  }
+
+  // Only send fields that actually changed.
+  const updates = {};
+  const fromNormalized = state.from.trim().length > 0 ? state.from.trim() : null;
+  const toTrimmed = state.to.trim();
+
+  if (toTrimmed !== originalData.to) {
+    updates.to = toTrimmed;
+    updates.toNormalized = normalizeTo(toTrimmed);
+    updates.toKeywords = buildToKeywords(toTrimmed);
+  }
+  if (state.salutation !== (originalData.salutation || "Dear")) updates.salutation = state.salutation;
+  if (fromNormalized !== (originalData.from || null)) updates.from = fromNormalized;
+  if (state.body !== originalData.body) updates.body = state.body;
+  if (state.themeId !== (originalData.themeId || "")) updates.themeId = state.themeId;
+  if (fieldThemeUrl.value !== (originalData.themeImageUrl || "")) updates.themeImageUrl = fieldThemeUrl.value || null;
+  if (state.fontId !== originalData.fontId) updates.fontId = state.fontId;
+  if (state.fontSize !== originalData.fontSize) updates.fontSize = state.fontSize;
+  if (state.inkColor !== originalData.inkColor) updates.inkColor = state.inkColor;
+  if (state.alignment !== originalData.alignment) updates.alignment = state.alignment;
+  if (state.status !== (originalData.status || "public")) updates.status = state.status;
+
+  if (Object.keys(updates).length === 0) {
+    showToast("No changes to save.");
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving…";
+  try {
+    await updateDoc(doc(db, "letters", currentLetterId), updates);
+    showToast("Saved.");
+    await loadDetail(currentLetterId); // reload to confirm + refresh originalData
+  } catch (err) {
+    console.error(err);
+    saveError.textContent = "Couldn't save — check the browser console. This may mean Firestore's security rules need the update in firestore.rules applied.";
+    saveError.classList.add("visible");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save changes";
+  }
+});
+
+deleteBtn.addEventListener("click", async () => {
+  if (!currentLetterId) return;
+  const confirmed = window.confirm("Delete this letter permanently? This cannot be undone.");
+  if (!confirmed) return;
+  deleteBtn.disabled = true;
+  try {
+    await deleteDoc(doc(db, "letters", currentLetterId));
+    showToast("Letter deleted.");
+    navigateToList();
+  } catch (err) {
+    showToast("Couldn't delete this letter.");
+  } finally {
+    deleteBtn.disabled = false;
+  }
+});
+
+/* ===================== Navigation ===================== */
+function setUrlParam(id) {
+  const url = new URL(window.location.href);
+  if (id) url.searchParams.set("id", id);
+  else url.searchParams.delete("id");
+  window.history.pushState({ id: id || null }, "", url);
+}
+
+function navigateToDetail(id) {
+  setUrlParam(id);
+  showDetailView(id);
+}
+function navigateToList() {
+  setUrlParam(null);
+  showListView();
+}
+function showListView() {
+  listView.style.display = "block";
+  detailView.style.display = "none";
+  currentLetterId = null;
+}
+function showDetailView(id) {
+  listView.style.display = "none";
+  detailView.style.display = "block";
+  loadDetail(id);
+}
+
+backLink.addEventListener("click", (e) => { e.preventDefault(); navigateToList(); });
+window.addEventListener("popstate", () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (id) showDetailView(id); else showListView();
+});
+window.addEventListener("resize", () => {
+  if (detailView.style.display === "block") repaintPreview();
+});
+
+/* ===================== Initial load ===================== */
+const initParams = new URLSearchParams(window.location.search);
+const initialId = initParams.get("id");
+if (initialId) {
+  showDetailView(initialId);
+} else {
+  showListView();
+  loadList(true);
+}
+</script>
+
+</body>
+</html>
