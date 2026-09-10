@@ -134,10 +134,17 @@
     margin-bottom: 6px;
   }
 
+  .field-hint {
+    font-size: 11px;
+    color: var(--faint);
+    margin-top: 5px;
+  }
+
   .field input[type="text"],
   .field input[type="url"],
   .field input[type="number"],
-  .field select {
+  .field select,
+  .field textarea {
     padding: 10px 11px;
     font-size: 14px;
     font-family: 'Inter', sans-serif;
@@ -147,8 +154,10 @@
     border-radius: 6px;
     outline: none;
   }
+  .field textarea { min-height: 56px; resize: vertical; font-family: 'Courier Prime', monospace; font-size: 12.5px; }
   .field input:focus,
-  .field select:focus {
+  .field select:focus,
+  .field textarea:focus {
     border-color: var(--focus);
   }
 
@@ -158,15 +167,60 @@
     gap: 14px;
   }
 
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
+  .color-field-row { display: flex; align-items: center; gap: 8px; }
+  .color-field-row input[type="color"] {
+    width: 36px; height: 36px; padding: 0; border: 1px solid var(--line);
+    border-radius: 6px; cursor: pointer; background: none; flex-shrink: 0;
   }
-  .toggle-row label {
+  .color-field-row input[type="text"] { flex: 1; }
+
+  /* ---- Theme type toggle ---- */
+  .theme-type-toggle {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    width: fit-content;
+  }
+  .theme-type-toggle button {
+    padding: 9px 18px;
     font-size: 13px;
-    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    border: none;
+    background: #FCFBF9;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .theme-type-toggle button + button { border-left: 1px solid var(--line); }
+  .theme-type-toggle button.active { background: var(--ink); color: #fff; }
+
+  .style-fields-note {
+    font-size: 12px;
+    color: var(--muted);
+    background: #FCFBF9;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .decor-preview {
+    width: 100%;
+    height: 90px;
+    border-radius: 6px;
+    border: 1px dashed var(--line);
+    margin: 4px 0 16px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .decor-preview .swatch-card {
+    position: absolute;
+    inset: 14px 30%;
+    border-radius: 3px;
   }
 
   .preview-box {
@@ -237,6 +291,22 @@
     background: #eee;
     flex-shrink: 0;
   }
+  .theme-thumb-swatch {
+    width: 56px;
+    height: 80px;
+    border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+    background-color: #eee;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .theme-thumb-swatch .swatch-card {
+    position: absolute;
+    inset: 8px 14%;
+    border-radius: 2px;
+  }
 
   .theme-info {
     flex: 1;
@@ -267,6 +337,16 @@
   }
   .tone-badge.light { background: #FCFBF9; color: var(--muted); }
   .tone-badge.dark { background: #2E2A24; color: #F7F4EF; border-color: #2E2A24; }
+
+  .unlimited-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--success-bg);
+    color: var(--success);
+  }
 
   .theme-controls {
     display: flex;
@@ -336,6 +416,7 @@
     font-size: 11px;
     color: var(--faint);
     margin-top: 14px;
+    line-height: 1.6;
   }
 
   .toast {
@@ -363,6 +444,7 @@
     <a href="admin-dashboard.html">Dashboard</a>
     <a href="admin-letters.html">Letters</a>
     <a href="admin-reports.html">Reports</a>
+    <a href="admin-data.html">Data</a>
     <button id="logout-btn">Log out</button>
   </div>
 </header>
@@ -377,6 +459,11 @@
     <section class="panel">
       <h2>Add theme</h2>
 
+      <div class="theme-type-toggle" id="themeTypeToggle">
+        <button type="button" class="active" data-type="image">Image theme</button>
+        <button type="button" data-type="style">Unlimited (style) theme</button>
+      </div>
+
       <div class="inline-error" id="add-error"></div>
 
       <form id="add-theme-form">
@@ -385,14 +472,74 @@
           <input type="text" id="theme-name" required>
         </div>
 
-        <div class="field">
-          <label for="drive-link">Google Drive share link</label>
-          <input type="url" id="drive-link" placeholder="https://drive.google.com/file/d/..." required>
+        <!-- Image theme fields -->
+        <div id="imageThemeFields">
+          <div class="field">
+            <label for="drive-link">Google Drive share link</label>
+            <input type="url" id="drive-link" placeholder="https://drive.google.com/file/d/...">
+          </div>
+
+          <div class="preview-box" id="preview-box">
+            <img id="preview-img" alt="Theme preview">
+            <div class="preview-label">Preview of the image that will be saved</div>
+          </div>
         </div>
 
-        <div class="preview-box" id="preview-box">
-          <img id="preview-img" alt="Theme preview">
-          <div class="preview-label">Preview of the image that will be saved</div>
+        <!-- Style (flow-layout / unlimited) theme fields -->
+        <div id="styleThemeFields" style="display:none;">
+          <p class="style-fields-note">
+            No image needed — this theme is pure CSS and lets writers write past the
+            normal 1,500-character limit (the letter scrolls instead of being boxed
+            into the fixed canvas). See the "Add these themes" instructions from
+            earlier for field meanings if you need a refresher.
+          </p>
+
+          <div class="decor-preview" id="stylePreviewBox">
+            <div class="swatch-card" id="stylePreviewCard"></div>
+          </div>
+
+          <div class="field">
+            <label for="style-char-limit">Character limit</label>
+            <input type="number" id="style-char-limit" value="6000" min="1500" step="500">
+          </div>
+
+          <div class="field">
+            <label for="style-environment-bg">Environment background (CSS, optional)</label>
+            <input type="text" id="style-environment-bg" placeholder="e.g. radial-gradient(ellipse at 50% 0%, #1b2340 0%, #07080f 100%) — leave blank if the letter fills the whole page">
+            <p class="field-hint">The area behind the letter card. Leave blank for themes like Notebook Pages where there's no separate backdrop.</p>
+          </div>
+
+          <div class="field">
+            <label for="style-letter-bg">Letter background color</label>
+            <div class="color-field-row">
+              <input type="color" id="style-letter-bg-picker" value="#f6f4ee">
+              <input type="text" id="style-letter-bg" value="#f6f4ee" placeholder="#f6f4ee">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="style-letter-pattern">Letter background pattern (CSS background-image, optional)</label>
+            <textarea id="style-letter-pattern" placeholder="e.g. linear-gradient(to right, #e2ddd0 1px, transparent 1px), linear-gradient(to bottom, #e2ddd0 1px, transparent 1px)"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="style-letter-pattern-size">Pattern size (optional)</label>
+              <input type="text" id="style-letter-pattern-size" placeholder="e.g. 24px 24px">
+            </div>
+            <div class="field">
+              <label for="style-letter-shadow">Card shadow color (optional)</label>
+              <input type="text" id="style-letter-shadow" placeholder="e.g. rgba(0,0,0,0.35)">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="style-decor">Decoration</label>
+            <select id="style-decor">
+              <option value="">None</option>
+              <option value="stars">Stars (scattered points over the environment)</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-row">
@@ -402,6 +549,7 @@
               <option value="light">Light</option>
               <option value="dark">Dark</option>
             </select>
+            <p class="field-hint" id="toneHint">Whichever surface the ink text actually sits on — for style themes, that's the letter card, even if the environment is dark.</p>
           </div>
           <div class="field">
             <label for="order-input">Display order</label>
@@ -409,12 +557,12 @@
           </div>
         </div>
 
-        <div class="toggle-row">
+        <div class="toggle-row" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
           <label class="switch">
             <input type="checkbox" id="active-toggle" checked>
             <span class="slider"></span>
           </label>
-          <label for="active-toggle">Active (visible to writers)</label>
+          <label for="active-toggle" style="font-size:13px;color:var(--ink);">Active (visible to writers)</label>
         </div>
 
         <button type="submit" class="primary-btn" id="add-submit-btn">Add theme</button>
@@ -425,7 +573,16 @@
       <h2>Existing themes</h2>
       <div id="theme-list"></div>
       <div class="empty-note" id="empty-note" style="display:none;">No themes yet — add your first one above.</div>
-      <p class="delete-caption">Deleting a theme does not affect letters that already reference it — their preview will simply keep using the saved image URL.</p>
+      <p class="delete-caption">
+        Deleting a theme, or turning it inactive, does not affect letters that already
+        reference it — every letter saves its own copy of the theme's image or style
+        at the moment it's written. <strong>Active</strong> only controls whether a
+        theme is offered as an option on the "Write a letter" page going forward;
+        turning a theme inactive is the safe way to retire it without breaking
+        anything already written. <strong>Delete</strong> removes the theme document
+        itself — also safe for existing letters, but permanent for the theme record
+        (you'll lose the ability to reuse or re-fetch its settings here).
+      </p>
     </section>
   </div>
 </main>
@@ -496,6 +653,22 @@
   const previewBox = document.getElementById("preview-box");
   const previewImg = document.getElementById("preview-img");
 
+  const themeTypeToggle = document.getElementById("themeTypeToggle");
+  const imageThemeFields = document.getElementById("imageThemeFields");
+  const styleThemeFields = document.getElementById("styleThemeFields");
+  let currentThemeType = "image"; // "image" | "style"
+
+  const styleCharLimitInput = document.getElementById("style-char-limit");
+  const styleEnvironmentBgInput = document.getElementById("style-environment-bg");
+  const styleLetterBgPicker = document.getElementById("style-letter-bg-picker");
+  const styleLetterBgInput = document.getElementById("style-letter-bg");
+  const styleLetterPatternInput = document.getElementById("style-letter-pattern");
+  const styleLetterPatternSizeInput = document.getElementById("style-letter-pattern-size");
+  const styleLetterShadowInput = document.getElementById("style-letter-shadow");
+  const styleDecorSelect = document.getElementById("style-decor");
+  const stylePreviewBox = document.getElementById("stylePreviewBox");
+  const stylePreviewCard = document.getElementById("stylePreviewCard");
+
   const themeListEl = document.getElementById("theme-list");
   const emptyNote = document.getElementById("empty-note");
   const toast = document.getElementById("toast");
@@ -515,7 +688,19 @@
     addError.classList.remove("visible");
   }
 
-  // Live preview as the writer pastes a Drive link
+  // ---------- Theme type toggle ----------
+  themeTypeToggle.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentThemeType = btn.dataset.type;
+      themeTypeToggle.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      imageThemeFields.style.display = currentThemeType === "image" ? "block" : "none";
+      styleThemeFields.style.display = currentThemeType === "style" ? "block" : "none";
+      clearAddError();
+    });
+  });
+
+  // ---------- Live preview: image theme (Drive link) ----------
   driveLinkInput.addEventListener("input", () => {
     const link = driveLinkInput.value.trim();
     if (!link) { previewBox.style.display = "none"; return; }
@@ -525,42 +710,130 @@
     previewBox.style.display = "block";
   });
 
+  // ---------- Live preview: style theme ----------
+  function updateStylePreview() {
+    const environmentBg = styleEnvironmentBgInput.value.trim();
+    const letterBg = styleLetterBgInput.value.trim() || "#f6f4ee";
+    const pattern = styleLetterPatternInput.value.trim();
+    const patternSize = styleLetterPatternSizeInput.value.trim();
+    const decor = styleDecorSelect.value;
+
+    stylePreviewBox.style.background = environmentBg || letterBg;
+    stylePreviewBox.style.backgroundSize = "cover";
+    // Clear any leftover decor layer from a previous preview pass.
+    Array.from(stylePreviewBox.querySelectorAll(".decor-stars")).forEach(el => el.remove());
+    if (environmentBg && decor === "stars") {
+      const starLayer = document.createElement("div");
+      starLayer.className = "decor-stars";
+      Object.assign(starLayer.style, {
+        position: "absolute", inset: "0",
+        backgroundImage:
+          "radial-gradient(1.5px 1.5px at 12% 20%, rgba(255,255,255,.9), transparent)," +
+          "radial-gradient(1px 1px at 34% 65%, rgba(255,255,255,.7), transparent)," +
+          "radial-gradient(1.5px 1.5px at 58% 15%, rgba(255,255,255,.85), transparent)," +
+          "radial-gradient(1px 1px at 78% 55%, rgba(255,255,255,.6), transparent)," +
+          "radial-gradient(1.5px 1.5px at 90% 30%, rgba(255,255,255,.75), transparent)"
+      });
+      stylePreviewBox.insertBefore(starLayer, stylePreviewCard);
+    }
+
+    stylePreviewCard.style.background = letterBg;
+    if (pattern) {
+      stylePreviewCard.style.backgroundImage = pattern;
+      stylePreviewCard.style.backgroundSize = patternSize || "auto";
+    } else {
+      stylePreviewCard.style.backgroundImage = "none";
+    }
+  }
+  [styleEnvironmentBgInput, styleLetterBgInput, styleLetterPatternInput,
+   styleLetterPatternSizeInput, styleDecorSelect].forEach(el => {
+    el.addEventListener("input", updateStylePreview);
+    el.addEventListener("change", updateStylePreview);
+  });
+  styleLetterBgPicker.addEventListener("input", () => {
+    styleLetterBgInput.value = styleLetterBgPicker.value;
+    updateStylePreview();
+  });
+  styleLetterBgInput.addEventListener("input", () => {
+    if (/^#[0-9a-fA-F]{6}$/.test(styleLetterBgInput.value)) {
+      styleLetterBgPicker.value = styleLetterBgInput.value;
+    }
+  });
+  updateStylePreview();
+
   addForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearAddError();
 
     const name = nameInput.value.trim();
-    const link = driveLinkInput.value.trim();
-    const fileId = extractDriveFileId(link);
-
-    if (!fileId) {
-      showAddError("Couldn't read a file ID from that link");
+    if (!name) {
+      showAddError("Enter a theme name.");
       return;
     }
 
-    const imageUrl = driveDirectUrl(fileId);
-    const thumbnailUrl = driveDirectUrl(fileId, 400);
+    let docData;
+
+    if (currentThemeType === "image") {
+      const link = driveLinkInput.value.trim();
+      const fileId = extractDriveFileId(link);
+      if (!fileId) {
+        showAddError("Couldn't read a file ID from that link");
+        return;
+      }
+      docData = {
+        name,
+        driveFileId: fileId,
+        imageUrl: driveDirectUrl(fileId),
+        thumbnailUrl: driveDirectUrl(fileId, 400),
+        backgroundTone: toneSelect.value,
+        active: activeToggle.checked,
+        order: Number(orderInput.value) || 0,
+        createdAt: serverTimestamp()
+      };
+    } else {
+      const letterBg = styleLetterBgInput.value.trim();
+      if (!letterBg) {
+        showAddError("Set a letter background color.");
+        return;
+      }
+      const charLimit = Number(styleCharLimitInput.value) || 6000;
+      docData = {
+        name,
+        imageUrl: null,
+        thumbnailUrl: null,
+        backgroundTone: toneSelect.value,
+        active: activeToggle.checked,
+        order: Number(orderInput.value) || 0,
+        createdAt: serverTimestamp(),
+        style: {
+          layoutType: "flow",
+          charLimit,
+          environmentBg: styleEnvironmentBgInput.value.trim() || null,
+          letterBg,
+          letterPattern: styleLetterPatternInput.value.trim() || null,
+          letterPatternSize: styleLetterPatternSizeInput.value.trim() || null,
+          letterShadow: styleLetterShadowInput.value.trim() || null,
+          decor: styleDecorSelect.value || null
+        }
+      };
+    }
 
     addSubmitBtn.disabled = true;
     addSubmitBtn.textContent = "Adding…";
 
     try {
-      await addDoc(collection(db, "themes"), {
-        name,
-        driveFileId: fileId,
-        imageUrl,
-        thumbnailUrl,
-        backgroundTone: toneSelect.value,
-        active: activeToggle.checked,
-        order: Number(orderInput.value) || 0,
-        createdAt: serverTimestamp()
-      });
+      await addDoc(collection(db, "themes"), docData);
 
       addForm.reset();
       activeToggle.checked = true;
       previewBox.style.display = "none";
+      styleCharLimitInput.value = 6000;
+      styleLetterBgInput.value = "#f6f4ee";
+      styleLetterBgPicker.value = "#f6f4ee";
+      updateStylePreview();
       showToast("Theme added.");
     } catch (err) {
+      console.error(err);
       showAddError("Couldn't save this theme. Please try again.");
     } finally {
       addSubmitBtn.disabled = false;
@@ -573,11 +846,28 @@
     row.className = "theme-row";
     row.dataset.id = id;
 
-    const thumb = document.createElement("img");
-    thumb.className = "theme-thumb";
-    thumb.src = data.thumbnailUrl || data.imageUrl || "";
-    thumb.alt = data.name || "Theme";
-    row.appendChild(thumb);
+    const isStyleTheme = !!(data.style && data.style.layoutType === "flow");
+
+    if (isStyleTheme) {
+      const swatch = document.createElement("div");
+      swatch.className = "theme-thumb-swatch";
+      swatch.style.background = data.style.environmentBg || data.style.letterBg || "#eee";
+      const card = document.createElement("div");
+      card.className = "swatch-card";
+      card.style.background = data.style.letterBg || "#fff";
+      if (data.style.letterPattern) {
+        card.style.backgroundImage = data.style.letterPattern;
+        card.style.backgroundSize = data.style.letterPatternSize || "auto";
+      }
+      swatch.appendChild(card);
+      row.appendChild(swatch);
+    } else {
+      const thumb = document.createElement("img");
+      thumb.className = "theme-thumb";
+      thumb.src = data.thumbnailUrl || data.imageUrl || "";
+      thumb.alt = data.name || "Theme";
+      row.appendChild(thumb);
+    }
 
     const info = document.createElement("div");
     info.className = "theme-info";
@@ -590,6 +880,12 @@
     toneBadge.className = `tone-badge ${data.backgroundTone === "dark" ? "dark" : "light"}`;
     toneBadge.textContent = data.backgroundTone === "dark" ? "Dark" : "Light";
     metaEl.appendChild(toneBadge);
+    if (isStyleTheme) {
+      const unlimitedBadge = document.createElement("span");
+      unlimitedBadge.className = "unlimited-badge";
+      unlimitedBadge.textContent = `Unlimited · ${(data.style.charLimit || 6000).toLocaleString()} chars`;
+      metaEl.appendChild(unlimitedBadge);
+    }
     const orderLabel = document.createElement("span");
     orderLabel.textContent = `Order ${data.order ?? 0}`;
     metaEl.appendChild(orderLabel);
@@ -619,13 +915,16 @@
 
     const switchLabel = document.createElement("label");
     switchLabel.className = "switch";
+    switchLabel.title = "Active themes appear as an option on the Write a letter page. Existing letters are unaffected either way.";
     const switchInput = document.createElement("input");
     switchInput.type = "checkbox";
     switchInput.checked = !!data.active;
     switchInput.addEventListener("change", async () => {
       try {
         await updateDoc(doc(db, "themes", id), { active: switchInput.checked });
-        showToast(switchInput.checked ? "Theme activated." : "Theme deactivated.");
+        showToast(switchInput.checked
+          ? "Theme activated — now offered to writers."
+          : "Theme deactivated — hidden from new letters, existing letters unaffected.");
       } catch (err) {
         showToast("Couldn't update this theme.");
         switchInput.checked = !switchInput.checked;
@@ -642,7 +941,7 @@
     deleteBtn.textContent = "Delete";
     deleteBtn.addEventListener("click", async () => {
       const confirmed = window.confirm(
-        `Delete "${data.name || "this theme"}"? Letters that already used it will keep working, but it will no longer be offered to new writers.`
+        `Delete "${data.name || "this theme"}"? Letters that already used it will keep working — each one saved its own copy of the image/style when it was written. This just removes the theme record itself and stops it being offered to new writers (deactivating does the same for offering, without removing the record).`
       );
       if (!confirmed) return;
       try {
