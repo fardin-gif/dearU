@@ -859,7 +859,13 @@ function buildCard(letterDoc) {
     // Read straight off the letter doc now — no themes collection fetch,
     // no per-card lookup. Falls back only for letters written before this
     // field existed.
-    themeImageUrl: data.themeImageUrl || FALLBACK_THEME_IMAGE
+    themeImageUrl: data.themeImageUrl || FALLBACK_THEME_IMAGE,
+    // Flow-layout ("unlimited") themes carry their visuals here instead of
+    // themeImageUrl. This was missing from this explicit field list (it
+    // predates the flow-layout feature), which silently dropped it and
+    // made every unlimited-theme card render as if it were a normal
+    // fixed-canvas theme with no image.
+    themeStyle: data.themeStyle || null
   };
 
   const card = document.createElement("a");
@@ -914,7 +920,8 @@ async function loadFirstLetter() {
       inkColor: data.inkColor,
       alignment: data.alignment,
       createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
-      themeImageUrl: data.themeImageUrl || FALLBACK_THEME_IMAGE
+      themeImageUrl: data.themeImageUrl || FALLBACK_THEME_IMAGE,
+      themeStyle: data.themeStyle || null
     };
 
     firstLetterLinkEl.href = `letter.html?id=${encodeURIComponent(letter.id)}`;
