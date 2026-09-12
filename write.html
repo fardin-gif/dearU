@@ -726,10 +726,32 @@ function updatePreview() {
   if (!state.themeId) return;
   const isFlow = state.themeStyle && state.themeStyle.layoutType === "flow";
   previewFrame.classList.toggle("flow-mode", !!isFlow);
+  // Belt-and-suspenders: set the same overrides as an inline style too, so
+  // this doesn't depend on the .flow-mode CSS rule actually winning against
+  // whatever else is loaded on the page. Inline styles always win.
+  if (isFlow) {
+    previewFrame.style.aspectRatio = "auto";
+    previewFrame.style.height = "auto";
+    previewFrame.style.maxHeight = "70vh";
+    previewFrame.style.overflow = "visible";
+    previewFrame.style.overflowY = "auto";
+  } else {
+    previewFrame.style.aspectRatio = "";
+    previewFrame.style.height = "";
+    previewFrame.style.maxHeight = "";
+    previewFrame.style.overflow = "";
+    previewFrame.style.overflowY = "";
+  }
   previewHint.textContent = isFlow
     ? "Live preview — scroll to see the full letter. This theme has no length limit."
     : "Live preview — this is exactly how your letter will look.";
-  renderLetterDOM(previewEl, state, currentScale());
+  // Render on the next frame, after the class/style change above has been
+  // applied and layout has settled — reading previewFrame's width for scale
+  // in the same tick as an aspect-ratio change can occasionally race ahead
+  // of layout in some browsers.
+  requestAnimationFrame(() => {
+    renderLetterDOM(previewEl, state, currentScale());
+  });
 }
 
 function isFlowTheme() {
