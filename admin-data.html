@@ -1166,6 +1166,11 @@ function currentFormState() {
     body: fieldBody.value,
     themeId: fieldThemeId.value,
     themeImageUrl: fieldThemeUrl.value || FALLBACK_THEME_IMAGE,
+    // No form field for this — flow-layout ("unlimited") theme style isn't
+    // hand-editable here, but it still needs to pass through so the live
+    // preview renders correctly (in flow mode, not the fixed-canvas
+    // fallback) while editing a flow-layout letter's other fields.
+    themeStyle: originalData ? (originalData.themeStyle || null) : null,
     fontId: fieldFont.value,
     fontSize: Number(fieldFontSize.value) || 30,
     inkColor: fieldInkColor.value,
