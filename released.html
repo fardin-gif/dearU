@@ -676,17 +676,28 @@
     `);
 
     const previewEl = document.getElementById('ru-preview');
-    previewEl.classList.toggle(
-      'flow-mode',
-      !!(letter.themeStyle && letter.themeStyle.layoutType === 'flow')
-    );
-    renderLetterDOM(previewEl, letter, computePreviewScale());
+    const isFlow = !!(letter.themeStyle && letter.themeStyle.layoutType === 'flow');
+    previewEl.classList.toggle('flow-mode', isFlow);
+    if (isFlow) {
+      previewEl.style.boxShadow = 'none';
+      previewEl.style.borderRadius = '0';
+      previewEl.style.overflow = 'visible';
+    } else {
+      previewEl.style.boxShadow = '';
+      previewEl.style.borderRadius = '';
+      previewEl.style.overflow = '';
+    }
+    requestAnimationFrame(() => {
+      renderLetterDOM(previewEl, letter, computePreviewScale());
+    });
 
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        renderLetterDOM(previewEl, letter, computePreviewScale());
+        requestAnimationFrame(() => {
+          renderLetterDOM(previewEl, letter, computePreviewScale());
+        });
       }, 150);
     });
 
