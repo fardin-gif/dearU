@@ -602,20 +602,7 @@ function showState(message) {
 }
 
 function relativeTime(date) {
-  const now = Date.now();
-  const diffMs = now - date.getTime();
-  const sec = Math.floor(diffMs / 1000);
-  if (sec < 60) return 'Released just now';
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `Released ${min} minute${min === 1 ? '' : 's'} ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `Released ${hr} hour${hr === 1 ? '' : 's'} ago`;
-  const day = Math.floor(hr / 24);
-  if (day < 30) return `Released ${day} day${day === 1 ? '' : 's'} ago`;
-  const mo = Math.floor(day / 30);
-  if (mo < 12) return `Released ${mo} month${mo === 1 ? '' : 's'} ago`;
-  const yr = Math.floor(mo / 12);
-  return `Released ${yr} year${yr === 1 ? '' : 's'} ago`;
+  return `Released ${date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
 }
 
 function buildFrame() {
