@@ -606,7 +606,7 @@
               <div class="field-row">
                 <label for="field-body">Body</label>
                 <div>
-                  <textarea id="field-body" maxlength="1500"></textarea>
+                  <textarea id="field-body"></textarea>
                   <div class="char-counter" id="body-counter">0 / 1500</div>
                 </div>
               </div>
@@ -720,7 +720,7 @@ const db = getFirestore(app);
 /* ===================== Canonical constants ===================== */
 const CANVAS = { width: 1414, height: 2000 };
 const LETTER_AREA = { left: 350, top: 520, width: 730, height: 930 };
-const CHAR_LIMIT = 1500;
+const DEFAULT_CHAR_LIMIT = 1500; // used when the letter's theme has no style.charLimit
 const LINE_HEIGHT_FACTOR = 1.5;
 
 // Union of every fontId that has ever been valid across write.html's list
@@ -784,9 +784,10 @@ const STAR_FIELD_CSS =
   "radial-gradient(1px 1px at 8% 85%, rgba(255,255,255,.5), transparent)," +
   "radial-gradient(1.5px 1.5px at 58% 90%, rgba(255,255,255,.6), transparent)";
 
-function renderLetterDOM(container, letter, scale = 1) {
+function renderLetterDOM(container, letter, scale = 1, options = {}) {
   container.innerHTML = "";
   const isFlow = letter.themeStyle && letter.themeStyle.layoutType === "flow";
+  const constrainHeight = !!options.constrainHeight;
 
   if (!isFlow) {
     container.style.position = "relative";
@@ -820,15 +821,29 @@ function renderLetterDOM(container, letter, scale = 1) {
   const style = letter.themeStyle;
   container.style.position = "relative";
   container.style.width = `${CANVAS.width * scale}px`;
-  container.style.minHeight = `${CANVAS.height * scale}px`;
-  container.style.height = "auto";
   container.style.background = style.environmentBg || style.letterBg || "#f6f4ee";
   container.style.backgroundSize = "cover";
-  container.style.overflow = "visible";
   container.style.display = "flex";
   container.style.justifyContent = "center";
   container.style.padding = `${40 * scale}px 0`;
   container.style.boxSizing = "border-box";
+
+  if (constrainHeight) {
+    // Card/thumbnail context: behave like a snapshot with a fixed height
+    // matching every other card on the shelf, clipped rather than growing
+    // the surrounding layout. Only the top portion of a long letter shows
+    // — exactly like a photo only shows what's inside its own frame.
+    container.style.height = `${CANVAS.height * scale}px`;
+    container.style.minHeight = "";
+    container.style.overflow = "hidden";
+  } else {
+    // Full-page / editor context: no fixed height — let it grow to fit the
+    // whole letter. The calling page's own wrapper CSS must not clip this
+    // (see each page's .flow-mode rule).
+    container.style.height = "auto";
+    container.style.minHeight = `${CANVAS.height * scale}px`;
+    container.style.overflow = "visible";
+  }
 
   if (style.environmentBg && style.decor === "stars") {
     const decor = document.createElement("div");
@@ -1150,12 +1165,19 @@ let currentLetterId = null;
 let originalData = null;
 
 function setPreviewScale() {
+  // Fit the CANVAS width into the available preview column width, then
+  // size the wrap to match the letter's actual rendered height (times that
+  // same scale) rather than assuming the fixed CANVAS.height. For a normal
+  // fixed-canvas theme this is exactly CANVAS.height anyway (renderLetterDOM
+  // sets that explicitly); for a flow-layout ("unlimited") theme,
+  // previewContainer's real height is content-driven, so it must be
+  // measured after rendering, not assumed.
   const available = previewWrap.clientWidth || 280;
   const scale = Math.min(1, available / CANVAS.width);
   previewContainer.style.transform = `scale(${scale})`;
   previewContainer.style.width = `${CANVAS.width}px`;
-  previewContainer.style.height = `${CANVAS.height}px`;
-  previewWrap.style.height = `${CANVAS.height * scale}px`;
+  const actualHeight = previewContainer.offsetHeight || CANVAS.height;
+  previewWrap.style.height = `${actualHeight * scale}px`;
 }
 
 function currentFormState() {
@@ -1180,14 +1202,28 @@ function currentFormState() {
 }
 
 function repaintPreview() {
-  setPreviewScale();
   renderLetterDOM(previewContainer, currentFormState(), 1);
+  setPreviewScale();
+}
+
+// The 1500 cap only applies to fixed-canvas themes — a flow-layout
+// ("unlimited") theme carries its own, higher limit on themeStyle.charLimit.
+// Without this, this editor was rejecting valid edits (even ones that never
+// touched the body) on any letter whose body legitimately exceeds 1500,
+// since the save button validated the whole form regardless of which field
+// actually changed.
+function currentCharLimit() {
+  if (originalData && originalData.themeStyle && originalData.themeStyle.charLimit) {
+    return originalData.themeStyle.charLimit;
+  }
+  return DEFAULT_CHAR_LIMIT;
 }
 
 function updateBodyCounter() {
   const len = fieldBody.value.length;
-  bodyCounter.textContent = `${len} / ${CHAR_LIMIT}`;
-  bodyCounter.classList.toggle("over", len > CHAR_LIMIT);
+  const limit = currentCharLimit();
+  bodyCounter.textContent = `${len} / ${limit}`;
+  bodyCounter.classList.toggle("over", len > limit);
 }
 
 [fieldTo, fieldSalutation, fieldFrom, fieldThemeId, fieldThemeUrl, fieldFont,
@@ -1323,8 +1359,9 @@ saveBtn.addEventListener("click", async () => {
     saveError.classList.add("visible");
     return;
   }
-  if (!state.body.trim() || state.body.length > CHAR_LIMIT) {
-    saveError.textContent = `Body must be non-empty and ${CHAR_LIMIT} characters or fewer.`;
+  const bodyLimit = currentCharLimit();
+  if (!state.body.trim() || state.body.length > bodyLimit) {
+    saveError.textContent = `Body must be non-empty and ${bodyLimit} characters or fewer.`;
     saveError.classList.add("visible");
     return;
   }
