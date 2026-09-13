@@ -789,18 +789,9 @@ const FALLBACK_THEME_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS.width}" height="${CANVAS.height}"><rect width="100%" height="100%" fill="#EFEAE0"/></svg>`
 );
 
-// ---------- Relative time ----------
+// ---------- Exact time ----------
 function timeAgo(date) {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  const units = [
-    ["year", 31536000], ["month", 2592000], ["week", 604800],
-    ["day", 86400], ["hour", 3600], ["minute", 60]
-  ];
-  for (const [name, secs] of units) {
-    const val = Math.floor(seconds / secs);
-    if (val >= 1) return `${val} ${name}${val > 1 ? "s" : ""} ago`;
-  }
-  return "just now";
+  return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
 // ---------- DOM refs ----------
